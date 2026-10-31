@@ -1,4 +1,4 @@
-const CACHE='kitchen-accounting-v45';
+const CACHE='kitchen-accounting-v46';
 const APP_SHELL=['./','./index.html','./manifest.webmanifest','./icon.svg'];
 
 self.addEventListener('install',event=>{
