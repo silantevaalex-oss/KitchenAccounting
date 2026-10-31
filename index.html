@@ -63,7 +63,7 @@ async function writeSheet(range,values){return sheetsRequest('/values/'+encodeUR
 function fieldValue(r,keys){for(const k of keys){if(r&&r[k]!==undefined&&r[k]!==null&&String(r[k]).trim()!=='')return r[k]}return 0}
 function numberValue(v){if(typeof v==='string')v=v.trim().replace(/\\s/g,'').replace(',','.');const n=Number(v);return Number.isFinite(n)?n:0}
 function normalizeRecord(r){return{id:String(fieldValue(r,['id','ID','Идентификатор'])),product:String(fieldValue(r,['product','Продукт','Название продукта'])),incoming:numberValue(fieldValue(r,['incoming','Приход','приход','arrival'])),waste:numberValue(fieldValue(r,['waste','Отход','отход'])),trim:numberValue(fieldValue(r,['trim','Обрезь','обрезь'])),yield:numberValue(fieldValue(r,['yield','Выход','выход'])),stamp:String(fieldValue(r,['stamp','Дата и время','Дата','date'])),comment:String(fieldValue(r,['comment','Комментарий','комментарий'])),steaks:numberValue(fieldValue(r,['steaks','Стейки, шт','Стейки']))}}
-function preserveNonzeroCloudValues(cloud,local){const keys=['incoming','waste','trim','yield','steaks'];const localZero=keys.every(k=>numberValue(local[k])===0),cloudHasValues=keys.some(k=>numberValue(cloud[k])!==0);return localZero&&cloudHasValues?{...cloud,...local,...Object.fromEntries(keys.map(k=>[k,numberValue(cloud[k])]))}:{...cloud,...local}}
+function preserveNonzeroCloudValues(cloud,local){const keys=['incoming','waste','trim','yield','steaks'];const merged={...cloud,...local};keys.forEach(k=>{const cv=numberValue(cloud[k]),lv=numberValue(local[k]);merged[k]=lv!==0?lv:cv});return merged}
 async function restoreGoogleFromSheet(){
  const btn=$('headerGoogleSync')||$('googleSync');if(btn)btn.disabled=true;
  googleStatus('Читаем Google Таблицу — без записи в неё…');
