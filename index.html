@@ -82,7 +82,7 @@ async function restoreGoogleFromSheet(){
  finally{if(btn)btn.disabled=false}
 }
 async function syncGoogle(){if(!googleToken)return;if(syncInProgress){syncRequestedAgain=true;return}syncInProgress=true;const btn=$('googleSync')||$('headerGoogleSync');if(btn)btn.disabled=true;googleStatus('Синхронизация: читаем Google и объединяем данные…');try{
- const [cloudProducts,cloudRecords,cloudNorms]=await Promise.all([readSheet('Products!A2:A'),readSheet('Records!A2:H'),readSheet('Norms!A2:B')]);
+ const [cloudProducts,cloudRecords,cloudNorms]=await Promise.all([readSheet('Products!A2:A'),readSheet('Records!A2:I'),readSheet('Norms!A2:B')]);
  const recordMap=new Map();cloudRecords.forEach(row=>{if(row[0])recordMap.set(String(row[0]),normalizeRecord({id:row[0],stamp:row[1],product:row[2],incoming:row[3],waste:row[4],trim:row[5],yield:row[6],comment:row[7],steaks:row[8]}))});records.forEach(r=>{const local=normalizeRecord(r),cloud=recordMap.get(String(local.id));recordMap.set(String(local.id),cloud?preserveNonzeroCloudValues(cloud,local):local)});
  const productMap=new Map();cloudProducts.forEach(row=>{if(row[0])productMap.set(row[0].toLocaleLowerCase(),String(row[0]))});products.forEach(p=>productMap.set(p.toLocaleLowerCase(),p));
  const normMap={};cloudNorms.forEach(row=>{if(row[0]!==undefined&&row[0]!==''&&row[1]!==undefined)normMap[String(row[0])]=Number(row[1])});Object.entries(norms).forEach(([p,v])=>normMap[p]=Number(v));
