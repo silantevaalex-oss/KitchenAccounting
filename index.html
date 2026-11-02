@@ -112,7 +112,7 @@ async function syncGoogle(){if(!googleToken)return;if(syncInProgress){syncReques
  const mergedRecords=[...recordMap.values()].sort((a,b)=>a.stamp.localeCompare(b.stamp));
  const mergedProducts=[...productMap.values()].sort((a,b)=>a.localeCompare(b,'ru'));
  const mergedNorms=Object.entries(normMap).filter(([p,v])=>p&&Number.isFinite(v)).sort((a,b)=>a[0].localeCompare(b[0],'ru'));
- const sheetRows=[['ID','Дата и время','Продукт','Приход','Отход','Обрезь','Фактический выход','Комментарий','Стейки, шт','Статус','Плановый выход'],...mergedRecords.map(r=>[String(r.id),String(r.stamp||''),String(r.product||''),numberValue(r.incoming),numberValue(r.waste),numberValue(r.trim),numberValue(r.actualYield??r.yield),String(r.comment||''),numberValue(r.steaks),'',numberValue(r.plannedYield??r.layout1)]),...deletedIds.map(id=>[String(id),'','','',0,0,'','',0,'DELETE',0,0,0,0,0])];
+ const sheetRows=[['ID','Дата и время','Продукт','Приход','Отход','Обрезь','Фактический выход','Комментарий','Стейки, шт','Статус','Плановый выход'],...mergedRecords.map(r=>[String(r.id),String(r.stamp||''),String(r.product||''),numberValue(r.incoming),numberValue(r.waste),numberValue(r.trim),numberValue(r.actualYield??r.yield),String(r.comment||''),numberValue(r.steaks),'',numberValue(r.plannedYield??r.layout1)]),...deletedIds.map(id=>[String(id),'','','',0,0,'','',0,'DELETE',0])];
  await writeSheet('Products!A1',[['Название продукта'],...mergedProducts.map(p=>[p])]);
  await sheetsRequest('/values/'+encodeURIComponent('Records!L1:O1000')+':clear',{method:'POST',body:JSON.stringify({})});
  await writeSheet('Records!A1',sheetRows);
