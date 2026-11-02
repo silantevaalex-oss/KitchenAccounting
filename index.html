@@ -13,8 +13,11 @@ main{padding:14px 12px;max-width:760px;margin:auto}.panel{background:var(--card)
 .layout-cell{border:1px solid #e5e9f0;border-radius:12px;padding:10px;background:#fbfcfe;min-width:0}
 .layout-cell label{font-size:12px;margin-bottom:7px;color:#555e6d}
 .layout-cell input{text-align:center;padding:11px 7px;font-size:16px;font-weight:650}
-.output-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
-.output-box{border:1px solid #e5e9f0;border-radius:12px;padding:12px;min-width:0}
+.output-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0;align-items:stretch}
+.output-box{border:1px solid #e5e9f0;border-radius:12px;padding:12px;min-width:0;display:flex;flex-direction:column;align-items:stretch}
+.output-box input{display:block;width:100%;height:48px;min-height:48px;margin:0;flex:0 0 48px;box-sizing:border-box;font:inherit;font-size:16px;line-height:normal;padding:12px}
+.output-box .output-label{min-height:30px;display:flex;align-items:flex-start;margin:0 0 6px 2px;line-height:1.25}
+.output-box .output-value{margin-top:6px;min-height:26px}
 .output-box.plan{background:#f2f7ff;border-color:#dbe8ff}
 .output-box.fact{background:#f0faf3;border-color:#d7f2df}
 .output-label{font-size:12px;color:#626d7d;font-weight:700}
