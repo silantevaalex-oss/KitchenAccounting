@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8"><meta name="description" content="Локальный учёт обработки продуктов на кухне, журнал и статистика."><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#292D2B"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Учёт кухни">
+<meta name="theme-color" content="#F1F1ED"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Учёт кухни">
 <link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" href="./icon.svg">
 <title>Учёт кухни</title>
 <style>
@@ -112,6 +112,48 @@ button.danger,.danger{background:#F7EEEE;color:#B76F6F}
 .stats-record{display:grid;grid-template-columns:1fr 1fr;gap:5px 10px;padding:9px 0;border-top:1px solid #EDF0ED;font-size:11px;color:#7C8580}
 .stats-record b{grid-column:1/-1;color:#59665E;font-weight:650}
 @media(max-width:360px){.journal-record{padding:11px 10px}.day-summary{padding:10px}.stats-total{padding:10px}.stats-product-top{align-items:flex-start}.stats-product-top strong{font-size:13px}}
+
+
+/* Calm low-glare palette: warm neutral surfaces and restrained accents */
+:root{
+ color-scheme:light;
+ --page:#F1F1ED;--surface:#F8F8F4;--surface-soft:#ECEDE8;
+ --ink:#414640;--muted:#858B83;--line:#E3E5DE;--card:#F8F8F4;
+ --green:#718477;--green-dark:#5F7064;--mint:#EEF1EC;
+ background:var(--page);color:var(--ink)
+}
+html,body{background:var(--page)!important;color:var(--ink)!important}
+header{background:var(--surface)!important;border-color:var(--line)!important;box-shadow:none!important}
+header h1:before{background:#A0AA9F!important}
+h1,h2,.daytitle,.stats-products-title{color:#515A52!important}
+header p,.muted,.nums,.note,.empty{color:var(--muted)!important}
+nav{background:var(--surface)!important;border-color:var(--line)!important;box-shadow:none!important}
+nav button{color:#858B83!important}
+nav button.active{background:#E5E9E2!important;color:#566258!important;box-shadow:none!important}
+.panel,.journal-record{background:var(--surface)!important;border:1px solid var(--line)!important;box-shadow:none!important}
+input,select{background:#F4F5F0!important;border-color:#DDE0D8!important;color:#414640!important}
+input:focus,select:focus{border-color:#A7B1A6!important;box-shadow:0 0 0 2px #A7B1A61C!important}
+label{color:#697168!important}
+button.primary,.primary{background:#788A7D!important;color:#fff!important;box-shadow:none!important}
+button.primary:active,.primary:active{background:#687A6D!important}
+button.secondary,.secondary{background:#E9ECE6!important;color:#647267!important;border:1px solid #DDE1D9!important}
+button.danger,.danger{background:#F2E9E6!important;color:#A97870!important}
+#headerGoogleSync{background:#ECEFE9!important;border-color:#DDE1D9!important;color:#68766B!important}
+.result,.day-summary,.stats-total,.stat,.dashboardstat,.layout-cell,.output-box,.deviation{
+ background:#F0F1EC!important;border-color:#E2E4DD!important
+}
+.result strong,.stat strong,.journal-metric strong,.journal-field strong,
+.stats-total strong,.stats-product-top strong,.stats-product-top b{color:#59665C!important}
+.output-box.plan,.output-box.fact{background:#F0F1EC!important;border-color:#E2E4DD!important}
+.output-box.plan .output-value,.output-box.fact .output-value{color:#647568!important}
+.good,.normgood{color:#6F927A!important}
+.bad,.normwarn{color:#B98279!important}
+.rankbar,.trendbar{background:#E4E6E0!important}
+.rankbar span,.trendbar span{background:#A1ADA1!important}
+.rankrow,.item,.compareline,.stats-product{border-color:#E5E7E1!important}
+.journal-record-head{border-color:#E9EBE5!important}
+.journal-time,.journal-comment{background:#EFF0EB!important;color:#7C857B!important}
+.stats-record{border-color:#E9EBE5!important}
 
 </style>
 </head><body>
