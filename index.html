@@ -231,6 +231,46 @@ button.secondary,.secondary{background:#EFEEE9!important;color:#626A60!important
 .journal-time,.journal-comment{background:#F0EFEA!important;color:#777970!important}.journal-record-head,.journal-fields,.stats-record,.stats-product,.compareline,.item,.rankrow{border-color:var(--line)!important}
 .stats-products-title{color:#626B61!important}.stats-product summary{color:#748075!important}
 
+
+/* ChatGPT-inspired light interface */
+:root{
+ color-scheme:light;
+ --page:#FFFFFF;--surface:#FFFFFF;--surface-soft:#F7F7F8;
+ --ink:#2F3437;--muted:#777F84;--line:#E7E9EA;
+ --sage:#6B8A78;--sage-dark:#587363;--sage-soft:#EAF0EC;
+ --good:#64856D;--bad:#B87570;
+ background:var(--page);color:var(--ink)
+}
+html,body{background:#fff!important;color:#2F3437!important}
+header{background:#fff!important;color:#2F3437!important;border-bottom:1px solid #ECEEEF!important;box-shadow:none!important}
+header h1:before{display:none!important}
+header p{color:#777F84!important}
+h1,h2,.daytitle{color:#343A3D!important}
+nav{background:#fff!important;border:0!important;border-bottom:1px solid #ECEEEF!important;border-radius:0!important;box-shadow:none!important;margin:0!important;padding:5px 10px!important;top:0!important}
+nav button{color:#747D82!important;border-radius:8px!important}
+nav button.active{background:#F1F3F3!important;color:#343A3D!important}
+main{padding-top:18px!important}
+.panel,.journal-record{background:#fff!important;border:1px solid #ECEEEF!important;border-radius:14px!important;box-shadow:none!important}
+input,select{background:#fff!important;border:1px solid #DADFE1!important;color:#343A3D!important;border-radius:10px!important}
+input:focus,select:focus{border-color:#AAB7AF!important;box-shadow:0 0 0 2px #AAB7AF22!important}
+label{color:#596267!important}
+button.primary,.primary{background:#E9EFEB!important;color:#40584A!important;border:1px solid #DFE8E1!important;box-shadow:none!important}
+button.primary:active,.primary:active{background:#DFE8E1!important}
+button.secondary,.secondary{background:#F7F7F8!important;color:#596267!important;border:1px solid #ECEEEF!important}
+button.danger,.danger{background:#F8F1F0!important;color:#A96F6A!important}
+#headerGoogleSync{background:#F7F7F8!important;color:#596267!important;border:1px solid #ECEEEF!important}
+.result,.day-summary,.stats-total,.stat,.dashboardstat,.layout-cell,.output-box,.deviation{background:#F7F7F8!important;border-color:#ECEEEF!important}
+.result strong,.stat strong,.journal-metric strong,.journal-field strong,.stats-total strong,.stats-product-top strong,.stats-product-top b,.rankrow b{color:#343A3D!important}
+.output-box.plan .output-value,.output-box.fact .output-value{color:#526C5B!important}
+.output-box.plan,.output-box.fact{background:#F7F7F8!important;border-color:#ECEEEF!important}
+.good,.normgood{color:#64856D!important}.bad,.normwarn{color:#B87570!important}
+.rankbar,.trendbar{background:#E9ECEC!important}.rankbar span,.trendbar span{background:#A3B0A8!important}
+.daytitle{color:#4D5952!important}
+.day-count,.muted,.nums,.note,.empty,.stats-total span,.stats-product-sub,.stats-product-meta,.journal-metric span,.journal-field span,.output-label{color:#7B8488!important}
+.journal-time,.journal-comment{background:#F7F7F8!important;color:#737D81!important}
+.journal-record-head,.journal-fields,.stats-record,.stats-product,.compareline,.item,.rankrow{border-color:#ECEEEF!important}
+.stats-products-title{color:#424B4F!important}.stats-product summary{color:#66736B!important}
+
 </style>
 </head><body>
 <header><div class="header-row"><h1>Учёт кухни</h1><button id="headerGoogleSync" type="button" aria-label="Синхронизировать с Google" title="Синхронизировать с Google"><span class="sync-icons" aria-hidden="true"><svg class="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7v5h-5"/><path d="M4.9 9A7.5 7.5 0 0 1 18.7 6L20 12M4 17v-5h5"/><path d="M19.1 15A7.5 7.5 0 0 1 5.3 18L4 12"/></svg></span><span>Google</span></button></div><p>Обработка продуктов · данные хранятся на этом iPhone</p><p id="headerGoogleStatus" aria-live="polite" style="margin-top:5px;font-size:12px"></p></header>
