@@ -356,7 +356,7 @@ async function restoreGoogleFromSheet(){
  const btn=$('headerGoogleSync')||$('googleSync');if(btn)btn.disabled=true;
  googleStatus('Читаем Google Таблицу — без записи в неё…');
  try{
-  const [cloudProducts,cloudRecords,cloudNorms,recordHeader]=await Promise.all([readSheet('Products!A2:A'),readSheet('Records!A2:K'),readSheet('Norms!A2:B'),readSheet('Records!A1:K1')]);
+  const [cloudProducts,cloudRecords,cloudNorms,recordHeader]=await Promise.all([readSheet('Products!A2:A'),readSheet('Records!A2:O'),readSheet('Norms!A2:B'),readSheet('Records!A1:O1')]);
   const restoredMap=new Map();
   cloudRecords.forEach(row=>{const parsed=parseSheetRecord(row,recordHeader[0]||[]);if(parsed.status==='DELETE'){deletedIds.push(String(parsed.id));return}if(parsed.id&&parsed.product&&!deletedIds.includes(String(parsed.id)))restoredMap.set(String(parsed.id),parsed)});
   records.forEach(local=>{const id=String(local.id||'');if(!id)return;const cloud=restoredMap.get(id);restoredMap.set(id,cloud?preserveNonzeroCloudValues(cloud,normalizeRecord(local)):normalizeRecord(local))});
@@ -372,7 +372,7 @@ async function restoreGoogleFromSheet(){
  finally{if(btn)btn.disabled=false}
 }
 async function syncGoogle(){if(!googleToken)return;if(syncInProgress){syncRequestedAgain=true;return}syncInProgress=true;const btn=$('googleSync')||$('headerGoogleSync');if(btn)btn.disabled=true;googleStatus('Синхронизация: читаем Google и объединяем данные…');try{
- const [cloudProducts,cloudRecords,cloudNorms,recordHeader]=await Promise.all([readSheet('Products!A2:A'),readSheet('Records!A2:K'),readSheet('Norms!A2:B'),readSheet('Records!A1:K1')]);
+ const [cloudProducts,cloudRecords,cloudNorms,recordHeader]=await Promise.all([readSheet('Products!A2:A'),readSheet('Records!A2:O'),readSheet('Norms!A2:B'),readSheet('Records!A1:O1')]);
  const recordMap=new Map();const cloudDeleted=new Set();cloudRecords.forEach(row=>{const parsed=parseSheetRecord(row,recordHeader[0]||[]);if(parsed.status==='DELETE'){cloudDeleted.add(String(parsed.id));return}if(parsed.id&&!deletedIds.includes(String(parsed.id)))recordMap.set(String(parsed.id),parsed)});records.forEach(r=>{const local=normalizeRecord(r),id=String(local.id);if(!deletedIds.includes(id)&&!cloudDeleted.has(id)){const cloud=recordMap.get(id);recordMap.set(id,cloud?preserveNonzeroCloudValues(cloud,local):local)}});deletedIds=[...new Set([...deletedIds,...cloudDeleted])];deletedIds.forEach(id=>recordMap.delete(id));
  const productMap=new Map();cloudProducts.forEach(row=>{if(row[0])productMap.set(row[0].toLocaleLowerCase(),String(row[0]))});products.forEach(p=>productMap.set(p.toLocaleLowerCase(),p));
  const normMap={};cloudNorms.forEach(row=>{if(row[0]!==undefined&&row[0]!==''&&row[1]!==undefined)normMap[String(row[0])]=Number(row[1])});Object.entries(norms).forEach(([p,v])=>normMap[p]=Number(v));
@@ -380,7 +380,7 @@ async function syncGoogle(){if(!googleToken)return;if(syncInProgress){syncReques
  const mergedProducts=[...productMap.values()].sort((a,b)=>a.localeCompare(b,'ru'));
  const mergedNorms=Object.entries(normMap).filter(([p,v])=>p&&Number.isFinite(v)).sort((a,b)=>a[0].localeCompare(b[0],'ru'));
  const sheetRows=[['ID','Дата и время','Продукт','Фактический выход','Плановый выход','Кол-во (шт)','Комментарий','Статус'],...mergedRecords.map(r=>[String(r.id),String(r.stamp||''),String(r.product||''),numberValue(r.actualYield??r.yield),numberValue(r.plannedYield??r.layout1),numberValue(r.steaks),String(r.comment||''),'']),...deletedIds.map(id=>[String(id),'','','',0,0,'','DELETE'])];
- await Promise.all([sheetsRequest('/values/'+encodeURIComponent('Products!A1:B10000')+':clear',{method:'POST',body:JSON.stringify({})}),sheetsRequest('/values/'+encodeURIComponent('Records!A1:K10000')+':clear',{method:'POST',body:JSON.stringify({})}),sheetsRequest('/values/'+encodeURIComponent('Norms!A1:B10000')+':clear',{method:'POST',body:JSON.stringify({})})]);
+ await Promise.all([sheetsRequest('/values/'+encodeURIComponent('Products!A1:B10000')+':clear',{method:'POST',body:JSON.stringify({})}),sheetsRequest('/values/'+encodeURIComponent('Records!A1:O10000')+':clear',{method:'POST',body:JSON.stringify({})}),sheetsRequest('/values/'+encodeURIComponent('Norms!A1:B10000')+':clear',{method:'POST',body:JSON.stringify({})})]);
  await writeSheet('Products!A1',[['Название продукта'],...mergedProducts.map(p=>[p])]);
  await writeSheet('Records!A1',sheetRows);
  await writeSheet('Norms!A1',[['Название продукта','Норматив выхода'],...mergedNorms]);
