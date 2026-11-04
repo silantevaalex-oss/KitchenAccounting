@@ -1,12 +1,12 @@
 {
-  "name": "KitchenAccounting — учёт обработки продуктов",
-  "short_name": "KitchenAccounting",
+  "name": "Учёт кухни — обработка продуктов",
+  "short_name": "Учёт кухни",
   "description": "Учёт обработки продуктов на кухне",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f5f5f5",
-  "theme_color": "#f0b90b",
+  "background_color": "#292D2B",
+  "theme_color": "#292D2B",
   "lang": "ru",
   "icons": [
     {
