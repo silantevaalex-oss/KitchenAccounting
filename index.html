@@ -210,6 +210,27 @@ button.danger,.danger{background:#F3EAE7;color:#A8756C}
 input::placeholder{color:#A1A59D}
 .empty{color:#858980}
 
+
+/* Calm warm-light theme: reduced contrast and muted accents */
+:root{color-scheme:light;--page:#F1F0ED;--surface:#F9F8F5;--surface-soft:#F4F3EF;--ink:#454741;--muted:#85867F;--line:#E5E3DD;--sage:#78877B;--sage-dark:#657568;--sage-soft:#E9EDE8;--good:#66836D;--bad:#B77C75;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:var(--page)}
+html,body{background:var(--page)!important;color:var(--ink)!important}
+header{background:var(--surface)!important;color:var(--ink)!important;border-color:var(--line)!important;box-shadow:none!important}
+header h1:before{background:var(--sage)!important}header p{color:var(--muted)!important}h1,h2,.daytitle{color:#55594F!important}
+nav{background:var(--surface)!important;border-color:var(--line)!important;box-shadow:none!important}nav button{color:var(--muted)!important}nav button.active{background:var(--sage-soft)!important;color:#4E5C51!important;box-shadow:none!important}
+.panel,.journal-record{background:var(--surface)!important;border:1px solid var(--line)!important;box-shadow:none!important}
+input,select{background:#FCFBF9!important;color:var(--ink)!important;border-color:#DEDCD5!important}input:focus,select:focus{border-color:#AAB5AA!important;box-shadow:0 0 0 3px #AAB5AA24!important;background:#FCFBF9!important}label{color:#696B63!important}
+button.primary,.primary{background:var(--sage)!important;color:#fff!important;box-shadow:none!important}button.primary:active,.primary:active{background:var(--sage-dark)!important}
+button.secondary,.secondary{background:#EFEEE9!important;color:#626A60!important;border:1px solid #E1DFD8!important}button.danger,.danger{background:#F5ECE9!important;color:var(--bad)!important}
+#headerGoogleSync{background:#EFEEE9!important;color:#626A60!important;border-color:#E1DFD8!important}
+.result,.day-summary,.stats-total,.stat,.dashboardstat,.layout-cell,.output-box,.deviation{background:var(--surface-soft)!important;border-color:var(--line)!important}
+.result strong,.stat strong,.journal-metric strong,.journal-field strong,.stats-total strong,.stats-product-top strong,.stats-product-top b,.rankrow b{color:#55594F!important}
+.output-box.plan .output-value,.output-box.fact .output-value{color:#68766B!important}.output-box.plan,.output-box.fact{background:var(--surface-soft)!important;border-color:var(--line)!important}
+.good,.normgood{color:var(--good)!important}.bad,.normwarn{color:var(--bad)!important}
+.rankbar,.trendbar{background:#E6E4DE!important}.rankbar span,.trendbar span{background:#9AA79A!important}
+.daytitle{color:#626B61!important}.day-count,.muted,.nums,.note,.empty,.stats-total span,.stats-product-sub,.stats-product-meta,.journal-metric span,.journal-field span,.output-label{color:var(--muted)!important}
+.journal-time,.journal-comment{background:#F0EFEA!important;color:#777970!important}.journal-record-head,.journal-fields,.stats-record,.stats-product,.compareline,.item,.rankrow{border-color:var(--line)!important}
+.stats-products-title{color:#626B61!important}.stats-product summary{color:#748075!important}
+
 </style>
 </head><body>
 <header><div class="header-row"><h1>Учёт кухни</h1><button id="headerGoogleSync" type="button" aria-label="Синхронизировать с Google" title="Синхронизировать с Google"><span class="sync-icons" aria-hidden="true"><svg class="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7v5h-5"/><path d="M4.9 9A7.5 7.5 0 0 1 18.7 6L20 12M4 17v-5h5"/><path d="M19.1 15A7.5 7.5 0 0 1 5.3 18L4 12"/></svg></span><span>Google</span></button></div><p>Обработка продуктов · данные хранятся на этом iPhone</p><p id="headerGoogleStatus" aria-live="polite" style="margin-top:5px;font-size:12px"></p></header>
