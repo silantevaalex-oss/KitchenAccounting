@@ -275,6 +275,27 @@ button.danger,.danger{background:#F8F1F0!important;color:#A96F6A!important}
 /* Journal deviation colors */
 #journal .deviation-value.good{color:#21834A!important}
 #journal .deviation-value.bad{color:#D04444!important}
+
+
+/* Product statistics: hierarchy and journal-matched deviation colors */
+.stats-total{gap:6px}
+.stats-total strong{font-size:20px;font-weight:700;letter-spacing:-.35px}
+.stats-total-diff{font-size:12px;font-weight:600;line-height:1.3}
+.stats-products-title{margin:18px 0 4px}
+.stats-product{padding:15px 0 13px}
+.stats-product-top{align-items:center}
+.stats-product-top b{font-size:15px;font-weight:700}
+.stats-product-top strong{font-size:23px;font-weight:750;letter-spacing:-.55px;line-height:1.2;color:#4D5952!important}
+.stats-product-sub{margin-top:7px;font-size:12px;align-items:center}
+.stats-deviation{font-size:12px;font-weight:600;white-space:nowrap}
+.stats-progress{height:5px;margin-top:9px;border-radius:99px;background:#E9ECEC;overflow:hidden}
+.stats-progress span{display:block;height:100%;border-radius:99px;background:#A3B0A8}
+.stats-product-meta{margin-top:7px;font-size:11px}
+.stats-record .stats-deviation{font-size:11px}
+#stats .stats-deviation.good,#stats .stats-total-diff.good{color:#21834A!important}
+#stats .stats-deviation.bad,#stats .stats-total-diff.bad{color:#D04444!important}
+#stats .stats-deviation:not(.good):not(.bad),#stats .stats-total-diff:not(.good):not(.bad){color:#7B8488!important}
+@media(max-width:360px){.stats-product-top strong{font-size:21px}.stats-total strong{font-size:18px}}
 </style>
 </head><body>
 <header><div class="header-row"><h1>Учёт кухни</h1><button id="headerGoogleSync" type="button" aria-label="Синхронизировать с Google" title="Синхронизировать с Google"><span class="sync-icons" aria-hidden="true"><svg class="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7v5h-5"/><path d="M4.9 9A7.5 7.5 0 0 1 18.7 6L20 12M4 17v-5h5"/><path d="M19.1 15A7.5 7.5 0 0 1 5.3 18L4 12"/></svg></span><span>Google</span></button></div><p>Обработка продуктов · данные хранятся на этом iPhone</p><p id="headerGoogleStatus" aria-live="polite" style="margin-top:5px;font-size:12px"></p></header>
@@ -324,10 +345,10 @@ function dateObj(s){return new Date((s||'')+'T12:00:00')}function dateStr(d){ret
  let rs=statsRecords(),by={},sumActual=0,sumPlan=0,sumQty=0;
  $('statsRange').textContent=start+' — '+end+($('statsProduct').value?' · '+$('statsProduct').value:' · все продукты');
  rs.forEach(r=>{let actual=Number(r.actualYield??r.yield??r.incoming)||0,plan=Number(r.plannedYield??r.layout1)||0,qty=Number(r.steaks)||0;sumActual+=actual;sumPlan+=plan;sumQty+=qty;by[r.product]??={actual:0,plan:0,qty:0,count:0,records:[]};let x=by[r.product];x.actual+=actual;x.plan+=plan;x.qty+=qty;x.count++;x.records.push(r)});
- let totalDiff=sumActual-sumPlan,totalPct=sumPlan>0?sumActual/sumPlan*100:0;
- $('productStats').innerHTML='<div class="stats-summary"><div class="stats-total"><span>Фактический выход</span><strong>'+kg(sumActual)+' кг</strong></div><div class="stats-total"><span>Плановый выход</span><strong>'+kg(sumPlan)+' кг</strong></div><div class="stats-total"><span>Отклонение</span><strong class="'+(totalDiff>=0?'good':'bad')+'">'+(totalDiff>0?'+':'')+kg(totalDiff)+' кг</strong></div><div class="stats-total"><span>Выполнение плана</span><strong class="'+(totalDiff>=0?'good':'bad')+'">'+totalPct.toLocaleString('ru-RU',{maximumFractionDigits:1})+'%</strong></div><div class="stats-total"><span>Количество</span><strong>'+sumQty+' шт</strong></div><div class="stats-total"><span>Обработок</span><strong>'+rs.length+'</strong></div></div><div class="stats-products-title">По продуктам</div>';
+ let totalDiff=sumActual-sumPlan;
+ $('productStats').innerHTML='<div class="stats-summary"><div class="stats-total"><span>Фактический выход</span><strong>'+kg(sumActual)+' кг</strong></div><div class="stats-total"><span>Плановый выход</span><strong>'+kg(sumPlan)+' кг</strong><small class="stats-total-diff '+(totalDiff>0?'good':totalDiff<0?'bad':'')+'">'+(totalDiff>0?'+':'')+kg(totalDiff)+' кг</small></div></div><div class="stats-products-title">По продуктам</div>';
  let names=Object.keys(by).sort((a,b)=>(by[b].actual-by[b].plan)-(by[a].actual-by[a].plan)||a.localeCompare(b,'ru'));
- $('productStats').innerHTML+=names.length?names.map(p=>{let x=by[p],diff=x.actual-x.plan,att=x.plan>0?x.actual/x.plan*100:0;return '<article class="stats-product"><div class="stats-product-top"><b>'+esc(p)+'</b><strong>'+kg(x.actual)+' кг</strong></div><div class="stats-product-sub"><span>План '+kg(x.plan)+' кг</span><span class="'+(diff>=0?'good':'bad')+'">Отклонение '+(diff>0?'+':'')+kg(diff)+' кг</span></div><div class="stats-product-meta"><span>'+x.count+' обработок · '+x.qty+' шт</span><span>Выполнение '+att.toLocaleString('ru-RU',{maximumFractionDigits:1})+'%</span></div><details><summary>Подробнее по записям</summary>'+x.records.map(r=>{let actual=Number(r.actualYield??r.yield??r.incoming)||0,plan=Number(r.plannedYield??r.layout1)||0,d=actual-plan,qty=Number(r.steaks)||0;return '<div class="stats-record"><b>'+esc((r.stamp||'').replace('T',' '))+'</b><span>Факт: '+kg(actual)+' кг</span><span>План: '+kg(plan)+' кг</span><span class="'+(d>=0?'good':'bad')+'">Отклонение: '+(d>0?'+':'')+kg(d)+' кг</span><span>Количество: '+qty+' шт</span></div>'}).join('')+'</details></article>'}).join(''):'<div class="empty">За выбранный период записей нет</div>';
+ $('productStats').innerHTML+=names.length?names.map(p=>{let x=by[p],diff=x.actual-x.plan,att=x.plan>0?x.actual/x.plan*100:0,bar=Math.max(0,Math.min(100,att));return '<article class="stats-product"><div class="stats-product-top"><b>'+esc(p)+'</b><strong>'+kg(x.actual)+' кг</strong></div><div class="stats-product-sub"><span>План: '+kg(x.plan)+' кг</span><span class="stats-deviation '+(diff>0?'good':diff<0?'bad':'')+'">'+(diff>0?'+':'')+kg(diff)+' кг</span></div><div class="stats-progress" role="img" aria-label="Факт относительно плана: '+att.toLocaleString('ru-RU',{maximumFractionDigits:1})+' процентов"><span style="width:'+bar.toFixed(2)+'%"></span></div><div class="stats-product-meta"><span>'+x.count+' обработок · '+x.qty+' шт</span><span>Средний выход: '+att.toLocaleString('ru-RU',{maximumFractionDigits:1})+'%</span></div><details><summary>Подробнее по записям</summary>'+x.records.map(r=>{let actual=Number(r.actualYield??r.yield??r.incoming)||0,plan=Number(r.plannedYield??r.layout1)||0,d=actual-plan,qty=Number(r.steaks)||0;return '<div class="stats-record"><b>'+esc((r.stamp||'').replace('T',' '))+'</b><span>Факт: '+kg(actual)+' кг</span><span>План: '+kg(plan)+' кг</span><span class="stats-deviation '+(d>0?'good':d<0?'bad':'')+'">Отклонение: '+(d>0?'+':'')+kg(d)+' кг</span><span>Количество: '+qty+' шт</span></div>'}).join('')+'</details></article>'}).join(''):'<div class="empty">За выбранный период записей нет</div>';
 }
 function csv(){let rows=[['Дата и время','Продукт','Фактический выход, кг','Плановый выход, кг','Отклонение, кг','Кол-во (шт)','Комментарий']];statsRecords().forEach(r=>{let actual=Number(r.actualYield??r.yield??r.incoming)||0,plan=Number(r.plannedYield??r.layout1)||0;rows.push([String(r.stamp||'').replace('T',' '),r.product,actual,plan,actual-plan,Number(r.steaks)||0,r.comment||''])});let data='\\ufeff'+rows.map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\\r\\n'),url=URL.createObjectURL(new Blob([data],{type:'text/csv;charset=utf-8;'})),a=document.createElement('a');a.href=url;a.download='KitchenAccounting-report-'+new Date().toISOString().slice(0,10)+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 $('exportCsv').onclick=csv;$('statsWeek').onclick=()=>{let end=new Date(),start=new Date(end);start.setDate(start.getDate()-6);$('statsStart').value=dateStr(start);$('statsEnd').value=dateStr(end);renderStats()};$('statsMonth').onclick=()=>{let end=new Date(),start=new Date(end.getFullYear(),end.getMonth(),1,12);$('statsStart').value=dateStr(start);$('statsEnd').value=dateStr(end);renderStats()};
