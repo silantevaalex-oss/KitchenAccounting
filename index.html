@@ -83,6 +83,33 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 #entry select,#products select,#techcards select,#ingredients select,#journal select,#stats select{width:100%;max-width:100%;box-sizing:border-box}
 @media(max-width:420px){.page-toolbar{min-height:44px;margin-bottom:11px}.page-toolbar h2{font-size:18px}.page-toolbar button{min-height:40px;min-width:88px;padding:7px 10px}}
 
+
+/* Единый каркас внутренних экранов */
+#pageToolbar{display:flex;min-height:46px;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px;padding:0}
+#pageToolbar h2{min-width:0;flex:1;margin:0;font-size:19px;line-height:1.25;font-weight:780;letter-spacing:-.35px;color:var(--ink)}
+#pageToolbar button{flex:0 0 auto;min-width:94px;min-height:40px;justify-content:center}
+main>.tab:not(#home){width:100%;min-width:0}
+main>.tab:not(#home)>.panel{width:100%;min-width:0;margin:0 0 12px;padding:15px;border:1px solid var(--line);border-radius:13px;background:var(--surface);box-shadow:0 1px 5px #00000008}
+main>.tab:not(#home)>.panel+ .panel{margin-top:0}
+main>.tab:not(#home) .section-head{display:flex;min-height:38px;align-items:center;justify-content:space-between;gap:9px;margin:0 0 12px}
+main>.tab:not(#home) .section-head h2,
+main>.tab:not(#home) .panel>h2:not(#techCardEditorTitle){margin:0;font-size:15px;line-height:1.35;font-weight:750}
+main>.tab:not(#home) .field{margin:0 0 12px}
+main>.tab:not(#home) label{margin:0 0 6px;font-size:12px;line-height:1.35;font-weight:700}
+main>.tab:not(#home) input:not([type=hidden]):not([type=file]),
+main>.tab:not(#home) select{width:100%;max-width:100%;min-width:0;min-height:44px;padding:10px 11px;border:1px solid #dcded8;border-radius:10px;background:#fff;font:inherit;font-size:16px;line-height:1.25}
+main>.tab:not(#home) button.primary,
+main>.tab:not(#home) button.secondary,
+main>.tab:not(#home) button.danger{min-height:44px;border-radius:10px;font-size:13px;font-weight:750}
+main>.tab:not(#home) button.compact-btn{min-height:36px!important;padding:7px 10px!important;font-size:11px!important}
+main>.tab:not(#home) .note{margin:8px 0 12px}
+@media(max-width:420px){
+ #pageToolbar{min-height:44px;margin-bottom:12px}
+ #pageToolbar h2{font-size:18px}
+ main>.tab:not(#home)>.panel{padding:13px;margin-bottom:10px}
+ main>.tab:not(#home) .section-head{min-height:36px;margin-bottom:10px}
+}
+
 </style>
 </head><body>
 <header><div class="header-row"><h1>Учёт кухни</h1><button id="headerGoogleSync" type="button" aria-label="Синхронизировать с Google" title="Синхронизировать с Google"><span class="sync-icons" aria-hidden="true"><svg class="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7v5h-5"/><path d="M4.9 9A7.5 7.5 0 0 1 18.7 6L20 12M4 17v-5h5"/><path d="M19.1 15A7.5 7.5 0 0 1 5.3 18L4 12"/></svg></span><span>Google</span></button></div><p>Учёт производства</p><p id="headerGoogleStatus" aria-live="polite" style="margin-top:5px;font-size:12px"></p></header>
