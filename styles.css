@@ -340,3 +340,7 @@ button.primary:active,.primary:active{
 }
 
 .ingredient-hidden-toggle{display:flex;align-items:center;gap:8px;margin:0 0 8px;color:var(--muted);font-size:12px;font-weight:600}.ingredient-hidden-toggle input{width:17px;min-height:17px;height:17px;margin:0;accent-color:var(--action)}
+
+/* Form and statistics grids */
+.entry-piece-grid{grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.stats-quick-range{grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
