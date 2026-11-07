@@ -287,6 +287,23 @@ button.primary:active,.primary:active{
  border-color:#383838!important;
 }
 
+
+/* Explicit charcoal styling for ingredient and tech-card actions */
+#techcards #newTechCard,
+#techcards #addTcIngredient,
+#techcards #quickIngredient,
+#ingredients #saveIngredient{
+ background:#202020!important;
+ border-color:#202020!important;
+ color:#fff!important;
+}
+#techcards #newTechCard:active,
+#techcards #addTcIngredient:active,
+#techcards #quickIngredient:active,
+#ingredients #saveIngredient:active{
+ background:#383838!important;
+ border-color:#383838!important;
+}
 </style>
 </head><body>
 <header><div class="header-row"><h1>Учёт кухни</h1><button id="headerGoogleSync" type="button" aria-label="Синхронизировать с Google" title="Синхронизировать с Google"><span class="sync-icons" aria-hidden="true"><svg class="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7v5h-5"/><path d="M4.9 9A7.5 7.5 0 0 1 18.7 6L20 12M4 17v-5h5"/><path d="M19.1 15A7.5 7.5 0 0 1 5.3 18L4 12"/></svg></span><span>Google</span></button></div><p>Учёт производства</p><p id="headerGoogleStatus" aria-live="polite" style="margin-top:5px;font-size:12px"></p></header>
