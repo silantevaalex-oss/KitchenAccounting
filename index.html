@@ -168,6 +168,109 @@ button,.home-tile,.home-create{touch-action:manipulation;-webkit-tap-highlight-c
  #journal .journal-fields{gap:7px}
 }
 
+
+/* Visual system v2 — align every section with the home screen */
+:root{
+ --page:#f4f4f1;--surface:#fff;--soft:#f8f8f6;--ink:#202020;
+ --muted:#7b7b75;--line:#e5e5df;--accent:#e8b916;--accent-soft:#fff8df;
+ --good:#39845a;--bad:#c65353;
+}
+html,body{background:var(--page);color:var(--ink)}
+header{padding:calc(13px + env(safe-area-inset-top)) 16px 13px;background:var(--surface);border-bottom:1px solid var(--line)}
+.header-row{max-width:680px}
+h1{font-size:22px;letter-spacing:-.55px}
+header p{font-size:12px;color:var(--muted)}
+#headerGoogleSync{min-height:42px;border:1px solid var(--line);border-radius:12px;background:var(--soft);font-size:12px}
+main{max-width:680px;padding:15px 14px calc(30px + env(safe-area-inset-bottom))}
+#pageToolbar{min-height:46px;margin-bottom:13px}
+#pageToolbar h2{font-size:20px;letter-spacing:-.45px}
+#pageToolbar button{min-height:42px;border-radius:12px;background:var(--surface);border-color:var(--line);font-size:13px}
+main>.tab:not(#home)>.panel{
+ margin:0 0 12px;padding:16px;border:1px solid var(--line);
+ border-radius:15px;background:var(--surface);box-shadow:0 2px 8px #20202006
+}
+main>.tab:not(#home) .section-head{min-height:36px;margin-bottom:12px}
+main>.tab:not(#home) .section-head h2,
+main>.tab:not(#home) .panel>h2:not(#techCardEditorTitle){font-size:16px;letter-spacing:-.2px}
+main>.tab:not(#home) .field{margin-bottom:13px}
+main>.tab:not(#home) label{color:#555650;font-size:12px;font-weight:700}
+main>.tab:not(#home) input:not([type=hidden]):not([type=file]),
+main>.tab:not(#home) select{
+ min-height:46px;padding:11px 12px;border:1px solid #deded8;border-radius:11px;
+ background:#fff;color:var(--ink);font-size:16px;line-height:1.25
+}
+main>.tab:not(#home) input[type=date]{width:100%;min-width:0;max-width:100%;padding:9px 8px;font-size:15px;appearance:none;-webkit-appearance:none}
+main>.tab:not(#home) input:focus,main>.tab:not(#home) select:focus{border-color:#c9a21b;box-shadow:0 0 0 3px #e8b91622}
+main>.tab:not(#home) button.primary,main>.tab:not(#home) button.secondary,main>.tab:not(#home) button.danger{
+ min-height:44px;border-radius:11px;font-size:13px;font-weight:750
+}
+main>.tab:not(#home) button.primary{background:var(--accent);border-color:var(--accent);color:#202020}
+main>.tab:not(#home) button.secondary{background:var(--soft);border-color:var(--line);color:#45453f}
+main>.tab:not(#home) button.danger{background:#fff4f2;border-color:#f0ddda;color:#b34b50}
+main>.tab:not(#home) .note{color:var(--muted);font-size:12px;line-height:1.55}
+#entry .output-box{min-height:92px;padding:11px;border-radius:12px;background:var(--soft);border-color:var(--line)}
+#entry .output-box.plan{background:#fffaf0;border-color:#eee3c8}
+#entry .output-box.fact{background:#f5faf6;border-color:#dce9df}
+#entry .deviation{min-height:46px;padding:11px 12px;border-radius:11px;background:var(--soft);border-color:var(--line)}
+#products .product-directory{margin-top:14px}
+#products .product-line{min-height:48px;display:flex;align-items:center;padding:11px 4px;border-top:1px solid var(--line);font-size:14px}
+#ingredients #ingredientList{margin-top:10px}
+#ingredients .ingredient-line{min-height:54px;padding:12px 3px;font-size:13px}
+#techcards .tc-card{padding:14px 0;border-bottom:1px solid var(--line)}
+#techcards .tc-card-head b{font-size:15px;line-height:1.35}
+#techcards .tc-meta{font-size:11px;line-height:1.5}
+#techcards .tc-lines{font-size:12px;line-height:1.65}
+#techcards .tc-row{padding:10px 0}
+#journal .daytitle{margin:18px 0 9px;font-size:14px;color:#695615}
+#journal .day-summary{gap:10px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--soft)}
+#journal .journal-metric span,#journal .journal-field span{font-size:11px}
+#journal .journal-metric strong,#journal .journal-field strong{font-size:14px}
+#journal .journal-record{margin:9px 0;padding:13px;border:1px solid var(--line);border-radius:13px;background:#fff;box-shadow:0 1px 4px #20202005}
+#journal .journal-record-head h3{font-size:15px}
+#journal .journal-fields{gap:12px;padding:12px 0 4px}
+#journal .journal-time{border-radius:8px;background:var(--soft);font-size:11px}
+#stats .stats-controls{align-items:start}
+#stats .stats-summary{gap:9px;margin:14px 0 9px}
+#stats .stats-total{min-height:76px;padding:12px;border-radius:12px;background:var(--soft);border-color:var(--line)}
+#stats .stats-total span{font-size:11px}
+#stats .stats-total strong{font-size:18px;letter-spacing:-.25px}
+#stats .stats-countline{padding:10px 2px 13px;font-size:12px}
+#stats .stats-products-title{margin:19px 0 7px;font-size:16px}
+#stats .stats-product{padding:15px 0}
+#stats .stats-product-top b{font-size:14px}
+#stats .stats-product-top strong{font-size:20px;letter-spacing:-.4px}
+#stats .stats-product-sub,#stats .stats-product-meta{font-size:12px}
+#stats .stats-product summary{padding:8px 0;font-size:12px}
+#stats .stats-record{padding:10px 0;font-size:11px}
+#stats .stats-progress,#stats .rankbar,#stats .trendbar{height:7px;border-radius:99px;background:#eeeee9}
+#stats .stats-progress span,#stats .rankbar span,#stats .trendbar span{background:#d6ad27}
+#stats .panel+.panel{margin-top:12px}
+.actions{gap:8px;margin-top:12px}
+.actions button{min-height:42px;border-radius:10px}
+.empty{padding:28px 12px;font-size:13px;color:var(--muted)}
+button,input,select{touch-action:manipulation}
+button:active{transform:translateY(1px)}
+@media(max-width:420px){
+ header{padding-left:14px;padding-right:14px}
+ main{padding:12px 12px calc(26px + env(safe-area-inset-bottom))}
+ main>.tab:not(#home)>.panel{padding:13px;border-radius:14px}
+ #pageToolbar h2{font-size:19px}
+ #pageToolbar button{min-width:88px;padding:7px 10px}
+ #stats .stats-total{min-height:70px;padding:10px}
+ #stats .stats-total strong{font-size:16px}
+ #stats .stats-product-top strong{font-size:18px}
+ #journal .journal-fields{gap:10px}
+ #journal input[type=date]{font-size:14px;padding:9px 6px}
+ #techcards .tc-row{gap:6px}
+}
+@media(max-width:360px){
+ main{padding-left:10px;padding-right:10px}
+ main>.tab:not(#home)>.panel{padding:11px}
+ #stats .stats-total{padding:8px}
+ #stats .stats-total strong{font-size:14px}
+ #journal .day-summary{gap:8px;padding:9px}
+}
+
 </style>
 </head><body>
 <header><div class="header-row"><h1>Учёт кухни</h1><button id="headerGoogleSync" type="button" aria-label="Синхронизировать с Google" title="Синхронизировать с Google"><span class="sync-icons" aria-hidden="true"><svg class="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7v5h-5"/><path d="M4.9 9A7.5 7.5 0 0 1 18.7 6L20 12M4 17v-5h5"/><path d="M19.1 15A7.5 7.5 0 0 1 5.3 18L4 12"/></svg></span><span>Google</span></button></div><p>Учёт производства</p><p id="headerGoogleStatus" aria-live="polite" style="margin-top:5px;font-size:12px"></p></header>
