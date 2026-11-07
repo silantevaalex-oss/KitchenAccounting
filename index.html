@@ -431,6 +431,36 @@ async function restoreGoogleFromSheet(){
  }catch(e){googleStatus('Восстановление не выполнено: '+e.message)}
  finally{if(btn)btn.disabled=false}
 }
+
+async function syncStage1Sheets(){
+ const names=['Ingredients','TechCards','TechCardIngredients'];
+ const meta=await sheetsRequest('?fields=sheets.properties(sheetId,title)');
+ const existing=new Set((meta.sheets||[]).map(x=>x.properties?.title));
+ const missing=names.filter(n=>!existing.has(n));
+ if(missing.length)await sheetsRequest(':batchUpdate',{method:'POST',body:JSON.stringify({requests:missing.map(title=>({addSheet:{properties:{title}}}))})});
+ const [ir,cr,lr]=await Promise.all([readSheet('Ingredients!A2:E'),readSheet('TechCards!A2:G'),readSheet('TechCardIngredients!A2:G')]);
+ const im=new Map();
+ ir.forEach(r=>{if(r[0])im.set(String(r[0]),{id:String(r[0]),name:String(r[1]||''),unit:String(r[2]||'кг'),category:String(r[3]||''),active:String(r[4]??'TRUE')!=='FALSE'})});
+ ingredients.forEach(x=>im.set(String(x.id),x));
+ const cm=new Map();
+ cr.forEach(r=>{if(r[0])cm.set(String(r[0])+'|'+String(r[1]),{cardId:String(r[0]),version:Number(r[1])||1,product:String(r[2]||''),outputQty:numberValue(r[3]),outputUnit:String(r[4]||'кг'),createdAt:String(r[5]||''),comment:String(r[6]||''),ingredients:[],active:true})});
+ lr.forEach(r=>{const c=cm.get(String(r[1])+'|'+String(r[2]));if(c)c.ingredients.push({ingredientId:String(r[3]||''),name:String(r[4]||''),quantity:numberValue(r[5]),unit:String(r[6]||'кг')})});
+ techCards.forEach(c=>cm.set(String(c.cardId)+'|'+String(c.version),c));
+ ingredients=[...im.values()];
+ techCards=[...cm.values()].sort((a,b)=>a.product.localeCompare(b.product,'ru')||a.version-b.version);
+ await Promise.all([
+  sheetsRequest('/values/'+encodeURIComponent('Ingredients!A1:Z10000')+':clear',{method:'POST',body:JSON.stringify({})}),
+  sheetsRequest('/values/'+encodeURIComponent('TechCards!A1:Z10000')+':clear',{method:'POST',body:JSON.stringify({})}),
+  sheetsRequest('/values/'+encodeURIComponent('TechCardIngredients!A1:Z10000')+':clear',{method:'POST',body:JSON.stringify({})})
+ ]);
+ await Promise.all([
+  writeSheet('Ingredients!A1',[['ID','Название','Ед. изм.','Категория','Активен'],...ingredients.map(x=>[x.id,x.name,x.unit,x.category||'',x.active===false?'FALSE':'TRUE'])]),
+  writeSheet('TechCards!A1',[['ID карты','Версия','Продукт','Готовый выход','Ед. выхода','Создано','Комментарий'],...techCards.map(c=>[c.cardId,c.version,c.product,c.outputQty,c.outputUnit,c.createdAt||'',c.comment||''])]),
+  writeSheet('TechCardIngredients!A1',[['ID строки','ID карты','Версия','ID ингредиента','Название ингредиента','Количество','Ед. изм.'],...techCards.flatMap(c=>c.ingredients.map((x,i)=>[c.cardId+'-'+c.version+'-'+(i+1),c.cardId,c.version,x.ingredientId,x.name,x.quantity,x.unit]))])
+ ]);
+ localStorage.setItem(INGKEY,JSON.stringify(ingredients));localStorage.setItem(TCKEY,JSON.stringify(techCards));
+}
+
 async function syncGoogle(){if(!googleToken)return;if(syncInProgress){syncRequestedAgain=true;return}syncInProgress=true;const btn=$('googleSync')||$('headerGoogleSync');if(btn)btn.disabled=true;googleStatus('Синхронизация: читаем Google и объединяем данные…');try{
  const [cloudProducts,cloudRecords,recordHeader]=await Promise.all([readSheet('Products!A2:A'),readSheet('Records!A2:O'),readSheet('Records!A1:O1')]);
  const recordMap=new Map();const cloudDeleted=new Set();cloudRecords.forEach(row=>{const parsed=parseSheetRecord(row,recordHeader[0]||[]);if(parsed.status==='DELETE'){cloudDeleted.add(String(parsed.id));return}if(parsed.id&&!deletedIds.includes(String(parsed.id)))recordMap.set(String(parsed.id),parsed)});records.forEach(r=>{const local=normalizeRecord(r),id=String(local.id);if(!deletedIds.includes(id)&&!cloudDeleted.has(id)){const cloud=recordMap.get(id);recordMap.set(id,cloud?preserveNonzeroCloudValues(cloud,local):local)}});deletedIds=[...new Set([...deletedIds,...cloudDeleted])];deletedIds.forEach(id=>recordMap.delete(id));
@@ -441,6 +471,7 @@ async function syncGoogle(){if(!googleToken)return;if(syncInProgress){syncReques
  await Promise.all([sheetsRequest('/values/'+encodeURIComponent('Products!A1:B10000')+':clear',{method:'POST',body:JSON.stringify({})}),sheetsRequest('/values/'+encodeURIComponent('Records!A1:O10000')+':clear',{method:'POST',body:JSON.stringify({})})]);
  await writeSheet('Products!A1',[['Название продукта'],...mergedProducts.map(p=>[p])]);
  await writeSheet('Records!A1',sheetRows);
+ await syncStage1Sheets();
  await removeNormsSheet();
  records=mergedRecords;products=mergedProducts;localStorage.setItem(KEY,JSON.stringify(records));localStorage.setItem(PKEY,JSON.stringify(products));localStorage.setItem(DKEY,JSON.stringify(deletedIds));renderAll();googleStatus('Синхронизация завершена. Записей: '+records.length+', продуктов: '+products.length+'.');
  }catch(e){googleStatus('Ошибка синхронизации: '+e.message+'. Локальные данные сохранены.')}finally{syncInProgress=false;if(btn)btn.disabled=false;if(syncRequestedAgain){syncRequestedAgain=false;scheduleGoogleSync()}}}
