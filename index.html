@@ -426,7 +426,7 @@ async function restoreGoogleFromSheet(){
   if(!restored.some(r=>r.actualYield!==0||r.plannedYield!==0||r.steaks!==0))throw new Error('Google вернул записи, но выходы и количество во всех строках равны нулю. Локальные данные не изменены.');
   const restoredProducts=[...new Set([...cloudProducts.map(r=>String(r[0]||'').trim()),...restored.map(r=>r.product)].filter(Boolean))];
   records=restored;products=[...new Set([...restoredProducts,...products])];
-  localStorage.setItem(KEY,JSON.stringify(records));localStorage.setItem(PKEY,JSON.stringify(products));localStorage.setItem(DKEY,JSON.stringify(deletedIds));renderAll();
+  localStorage.setItem(KEY,JSON.stringify(records));localStorage.setItem(PKEY,JSON.stringify(products));localStorage.setItem(DKEY,JSON.stringify(deletedIds));await syncStage1Sheets();renderAll();
   googleStatus('Восстановлено из Google: '+records.length+' записей. Таблица Google не изменялась.');
  }catch(e){googleStatus('Восстановление не выполнено: '+e.message)}
  finally{if(btn)btn.disabled=false}
