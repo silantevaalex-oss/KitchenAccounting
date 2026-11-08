@@ -24,7 +24,7 @@ export function parseSheetRecord(row,header=[]){
  if(id&&status.toUpperCase()==='DELETE')return{id:String(id),status:'DELETE',deletedAt:String(row[indexes['Время удаления']!==undefined?indexes['Время удаления']:13]||'')};
  const actualIndex=indexes['Фактический выход']!==undefined?indexes['Фактический выход']:3;
  const actual=numberValue(row[actualIndex]),legacy=indexes['Приход']!==undefined;
- return normalizeRecord({id,stamp:at('Дата и время',1),product:at('Продукт',2),yield:actual,actualYield:actual,plannedYield:at('Плановый выход',legacy?7:4),steaks:at('Кол-во (шт)',indexes['Количество']!==undefined?8:5),unitWeight:at('Вес 1 шт (кг)',-1),comment:at('Комментарий',legacy?9:6),techCardScale:at('Пересчёт по техкарте',-1),updatedAt:at('Время изменения',12)});
+ return normalizeRecord({id,stamp:at('Дата и время',1),product:at('Продукт',2),yield:actual,actualYield:actual,plannedYield:at('Плановый выход',legacy?7:4),steaks:at('Кол-во (шт)',indexes['Количество']!==undefined?indexes['Количество']:5),unitWeight:at('Вес 1 шт (кг)',-1),comment:at('Комментарий',legacy?9:6),techCardScale:at('Пересчёт по техкарте',-1),updatedAt:at('Время изменения',12)});
 }
 export function recordContent(record){const normalized=normalizeRecord(record);delete normalized.updatedAt;return JSON.stringify(normalized)}
 export function mergeRecordLocalWins(cloud,local){return mergeVersioned(cloud,local,'обработки',recordContent)}
