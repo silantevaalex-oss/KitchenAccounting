@@ -1,7 +1,7 @@
-import { versionNow, nowLocal, dayOf, kg, esc, totalRecordActual, dateStr, pct, numberValue, normalizeTechProductName, techCardPlanInKg } from './js/core.js?v=136';
-import { summarizeRecords } from './js/reports.js?v=136';
-import { readStore } from './js/storage.js?v=136';
-import { mergeVersioned } from './js/sync-merge.js?v=136';
+import { versionNow, nowLocal, dayOf, kg, esc, totalRecordActual, dateStr, pct, numberValue, normalizeTechProductName, techCardPlanInKg } from './js/core.js';
+import { summarizeRecords } from './js/reports.js';
+import { readStore } from './js/storage.js';
+import { mergeVersioned } from './js/sync-merge.js';
 const KEY='kitchenAccountingRecordsV1',PKEY='kitchenAccountingProductsV2',DKEY='kitchenAccountingDeletedIdsV1',DMKEY='kitchenAccountingDeletedAtV1';try{localStorage.removeItem('kitchenAccountingNormsV1')}catch(e){}let records=readStore(KEY,[]),products=readStore(PKEY,[]),deletedIds=readStore(DKEY,[]),deletedAt=readStore(DMKEY,{}),editing=null; if(!Array.isArray(records))records=[];if(!Array.isArray(products))products=[];if(!Array.isArray(deletedIds))deletedIds=[];deletedIds=deletedIds.map(String);if(!deletedAt||typeof deletedAt!=='object'||Array.isArray(deletedAt))deletedAt={};const $=id=>document.getElementById(id);
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(records));localStorage.setItem(PKEY,JSON.stringify(products));localStorage.setItem(DKEY,JSON.stringify(deletedIds));localStorage.setItem(DMKEY,JSON.stringify(deletedAt))}catch(e){alert('Не удалось сохранить данные на устройстве. Проверь свободное место и разрешение на хранение данных. Ошибка: '+e.message);return false}renderAll();scheduleGoogleSync?.();return true}
 
