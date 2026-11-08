@@ -76,7 +76,7 @@ export function createGoogleSync({api,storage,keys,getState,setState,helpers,ui}
   const header=rows[0]||[],data=rows.slice(1),commentIndex=header.indexOf('Комментарий');
   if(commentIndex<0)throw new Error('В листе Records не найдена колонка «Комментарий».');
   const state=getState(),localById=new Map(state.records.map(r=>[String(r.id),r])),cloudById=new Map();
-  data.forEach((row,index)=>{const id=String(row[header.indexOf('ID')>=0?header.indexOf('ID'):0]||'');if(id)cloudById.set(id,{row,rowNumber:index+2})});
+  data.forEach((row,index)=>{const id=String(row[header.indexOf('ID')>=0?header.indexOf('ID'):0]||''),statusIndex=header.indexOf('Статус');if(id&&String(row[statusIndex>=0?statusIndex:8]||'').toUpperCase()!=='DELETE')cloudById.set(id,{row,rowNumber:index+2})});
   const eligibleIds=new Set(),skippedIds=new Set();
   for(const [id,entry] of cloudById){
    if(entry.row[commentIndex]!=='0')continue;
@@ -107,9 +107,9 @@ export function createGoogleSync({api,storage,keys,getState,setState,helpers,ui}
    const id=String(record.id);
    return eligibleIds.has(id)&&record.comment==='0'?{...record,comment:'',updatedAt:stamps.get(id)}:record;
   });
-  pendingCommentCleanup={cloudUpdates,nextRecords,eligibleIds:[...eligibleIds],skippedIds:[...skippedIds]};
+  const localCount=nextRecords.filter((r,i)=>state.records[i]?.comment==='0'&&r.comment==='').length;\n  pendingCommentCleanup={cloudUpdates,nextRecords,eligibleIds:[...eligibleIds],skippedIds:[...skippedIds],localCount};
   return {
-   localCount:nextRecords.filter((r,i)=>state.records[i]?.comment==='0'&&r.comment==='').length,
+   localCount,
    cloudCount:cloudUpdates.length/2,
    skippedCount:skippedIds.size,
    backup:{app:'KitchenAccounting',type:'before-legacy-comment-cleanup',createdAt:versionNow(),localRecords:state.records,googleRecords:rows}
@@ -126,7 +126,7 @@ export function createGoogleSync({api,storage,keys,getState,setState,helpers,ui}
   storage.setItem(keys.records,JSON.stringify(pending.nextRecords));
   renderAll();
   pendingCommentCleanup=null;
-  return {localCount:pending.nextRecords.filter((r,i)=>state.records[i]?.comment==='0'&&r.comment==='').length,cloudCount:pending.cloudUpdates.length/2,skippedCount:pending.skippedIds.length};
+  return {localCount:pending.localCount,cloudCount:pending.cloudUpdates.length/2,skippedCount:pending.skippedIds.length};
  }
  async function syncGoogle(){
   if(!api.hasToken())return;
