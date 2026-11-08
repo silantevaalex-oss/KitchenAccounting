@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { numberValue, totalRecordActual, dayOf, normalizeTechProductName, techCardPlanInKg, esc } from '../js/core.js';
 import { summarizeRecords } from '../js/reports.js';
+import { readStore } from '../js/storage.js';
+import { mergeVersioned } from '../js/sync-merge.js';
 
 test('numberValue accepts decimal commas and grouped spaces',()=>{
  assert.equal(numberValue('1 234,5'),1234.5);
@@ -44,4 +46,23 @@ test('report summary totals, product breakdown and completion percent',()=>{
 test('empty report has no completion percentage',()=>{
  const result=summarizeRecords([]);
  assert.equal(result.actual,0);assert.equal(result.planned,0);assert.equal(result.completionPercent,null);assert.deepEqual(result.byProduct,[]);
+});
+
+test('storage reads valid JSON and safely falls back on invalid JSON',()=>{
+ const storage={getItem:key=>key==='good'?'[1,2]':key==='broken'?'not-json':null};
+ assert.deepEqual(readStore('good',[],storage),[1,2]);
+ assert.deepEqual(readStore('broken',[],storage),[]);
+ assert.deepEqual(readStore('missing',{safe:true},storage),{safe:true});
+});
+test('versioned merge selects the newer cloud or local revision',()=>{
+ const content=x=>JSON.stringify({value:x.value});
+ const cloudWins=mergeVersioned({value:2,updatedAt:'2026-11-09T12:00:00Z'},{value:1,updatedAt:'2026-11-09T11:00:00Z'},'test',content);
+ const localWins=mergeVersioned({value:1,updatedAt:'2026-11-09T11:00:00Z'},{value:2,updatedAt:'2026-11-09T12:00:00Z'},'test',content);
+ assert.equal(cloudWins.value,2);assert.equal(localWins.value,2);
+});
+test('versioned merge stops on conflicting equal or missing versions',()=>{
+ const content=x=>JSON.stringify({value:x.value});
+ assert.throws(()=>mergeVersioned({value:1,updatedAt:'same'},{value:2,updatedAt:'same'},'тест',content),/одинаковое время изменения/);
+ assert.throws(()=>mergeVersioned({value:1},{value:2},'тест',content),/без версии/);
+ assert.throws(()=>mergeVersioned({value:1,_versionInvalid:true},{value:2},'тест',content),/без подтверждённой версии/);
 });
