@@ -883,3 +883,47 @@ button.primary:active,.primary:active{
   #techcards #techCardEditor #tcIngredientRows .tc-row select,
   #techcards #techCardEditor #tcIngredientRows .tc-row input{font-size:13px!important}
 }
+
+/* v127 — компактная статистика по продуктам */
+#stats #productStats .stats-products-title{margin:20px 0 5px;padding-top:4px;font-size:16px}
+#stats #productStats .stats-product{
+  padding:14px 0 13px;
+  border-bottom:1px solid #e9e9e3;
+}
+#stats #productStats .stats-product-top{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+}
+#stats #productStats .stats-product-top b{
+  flex:1;min-width:0;font-size:14px;font-weight:700;line-height:1.35;
+}
+#stats #productStats .stats-product-top strong{
+  flex-shrink:0;font-size:19px;font-weight:800;letter-spacing:-.35px;
+  font-variant-numeric:tabular-nums;
+}
+#stats #productStats .stats-product-sub{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  margin-top:5px;color:#77776f;font-size:12px;
+}
+#stats #productStats .stats-plan-missing{color:#92928b}
+#stats #productStats .stats-deviation{font-size:12px;font-weight:700}
+#stats #productStats .stats-progress{
+  height:6px;margin-top:9px;border-radius:10px;background:#eeeee9;overflow:hidden;
+}
+#stats #productStats .stats-progress span{display:block;height:100%;border-radius:10px;background:#c9a52b}
+#stats #productStats .stats-product-meta{
+  display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;
+  margin-top:7px;color:#898982;font-size:11px;
+}
+#stats #productStats .stats-product details{margin-top:5px}
+#stats #productStats .stats-product summary{
+  display:inline-block;padding:5px 0;color:#747d82;font-size:11px;cursor:pointer;
+}
+#stats #productStats .stats-record{
+  display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;
+  padding:9px 0;border-top:1px solid #efefeb;color:#77776f;font-size:11px;
+}
+#stats #productStats .stats-record b{grid-column:1/-1;color:#292929;font-weight:650}
+@media(max-width:360px){
+  #stats #productStats .stats-product-top strong{font-size:17px}
+  #stats #productStats .stats-product-sub{font-size:11px}
+}
