@@ -895,3 +895,38 @@ button.primary:active,.primary:active{
  cursor:pointer;transition:background .15s,border-color .15s;
 }
 .stats-sort-btn:active{background:var(--line)}
+
+
+/* v134 — динамика выхода и печатный PDF-отчёт */
+.stats-chart-panel{margin:14px 0;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.stats-chart-panel .section-head{align-items:baseline}
+.yield-chart{width:100%;min-height:150px;overflow:hidden}
+.yield-chart-svg{display:block;width:100%;height:auto;min-height:150px;overflow:visible}
+.yield-line-fact,.yield-line-plan{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.yield-line-fact{stroke:#39845a}.yield-line-plan{stroke:#c5a02a;stroke-dasharray:6 4}
+.yield-dot-fact{fill:#39845a;stroke:#fff;stroke-width:1.5}.yield-dot-plan{fill:#c5a02a;stroke:#fff;stroke-width:1.5}
+.yield-chart-legend{display:flex;justify-content:center;gap:20px;padding:5px 0 0;color:var(--muted);font-size:11px}
+.yield-chart-legend span{display:inline-flex;align-items:center;gap:6px}
+.yield-chart-legend i{display:inline-block;width:17px;height:3px;border-radius:4px}
+.yield-legend-fact{background:#39845a}.yield-legend-plan{background:#c5a02a}
+.stats-export-actions{grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.stats-export-actions button{min-width:0;font-size:13px}
+.pdf-report{display:none}
+@media print{
+ @page{size:A4;margin:12mm}
+ body{background:#fff!important;color:#111!important;font-size:10pt}
+ body *{visibility:hidden!important}
+ #pdfReport,#pdfReport *{visibility:visible!important}
+ #pdfReport{display:block!important;position:absolute;left:0;top:0;width:100%;padding:0;background:#fff;color:#111;font-family:Arial,sans-serif}
+ #pdfReport h1{font-size:19pt;margin:0 0 7px}
+ #pdfReport h2{font-size:13pt;margin:16px 0 7px;break-after:avoid}
+ #pdfReport p{font-size:9pt;margin:4px 0;color:#444}
+ #pdfReport table{width:100%;border-collapse:collapse;margin:6px 0 14px;font-size:8pt}
+ #pdfReport th,#pdfReport td{border:1px solid #ccc;padding:5px;text-align:left;vertical-align:top}
+ #pdfReport th{background:#f1f1ed;font-weight:700}
+ #pdfReport tr{break-inside:avoid}
+ .pdf-kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin:14px 0}
+ .pdf-kpis div{border:1px solid #ddd;padding:8px}
+ .pdf-kpis span{display:block;font-size:8pt;color:#555;margin-bottom:4px}
+ .pdf-kpis b{font-size:12pt}
+}
