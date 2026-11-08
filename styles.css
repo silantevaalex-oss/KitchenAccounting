@@ -352,3 +352,12 @@ button.primary:active,.primary:active{
 .tc-scale-composition-toggle{display:block;margin-top:8px;padding:4px 0;border:0;background:transparent;color:var(--action);font:inherit;font-size:12px;font-weight:650;text-decoration:underline}.tc-scale-composition{margin-top:8px;padding:8px 10px;border-radius:9px;background:#fff}.tc-scale-composition-row{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid var(--line);font-size:12px}.tc-scale-composition-row:last-child{border-bottom:0}.tc-scale-composition-row span:last-child{font-weight:700;white-space:nowrap}
 
 .tc-scale-saved{margin:10px 0;padding:10px;border:1px solid var(--line);background:var(--soft);font-size:12px}.tc-scale-saved summary{cursor:pointer;font-weight:700;line-height:1.45}.tc-scale-saved-meta{margin:8px 0;color:var(--muted);font-size:11px}.tc-scale-saved-row{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-top:1px solid var(--line)}.tc-scale-saved-row strong{text-align:right;white-space:nowrap}
+
+/* v119: компактный чёрный крестик и фиксированная единица кг */
+#techcards .tc-row{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;align-items:start;padding:9px 0}
+#techcards .tc-row-top{grid-column:1;display:flex;align-items:flex-start;gap:6px;padding-right:0}
+#techcards .tc-row-top .field{flex:1;min-width:0;margin-bottom:0}
+#techcards .tc-row-remove{flex:0 0 22px;width:22px;height:22px;margin:3px 0 0;padding:0;border:0;border-radius:4px;background:transparent;color:#111;font-size:17px;font-weight:500;line-height:1}
+#techcards .tc-row-remove:active{background:#eee}
+#techcards .tc-row .tc-quantity-field{grid-column:1;width:100%;margin:2px 0 0}
+#techcards .tc-row select,#techcards .tc-row input{min-height:38px;padding:7px 8px;font-size:14px}
