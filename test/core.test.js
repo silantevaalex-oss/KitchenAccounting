@@ -170,8 +170,16 @@ test('tech card UI module renders empty directories without changing saved data'
   productsKey:'products'
  });
  ui.renderStage1();
- assert.match($('ingredientList').innerHTML,/Справочник пока пуст/);
+ assert.match($('ingredientList').innerHTML,/Активных ингредиентов нет/);
  assert.match($('techCardList').innerHTML,/Технологических карт пока нет/);
+ assert.deepEqual(writes,[]);
+ ui.setState({
+  ingredients:[{id:'i1',name:'Мясо',unit:'кг',active:true}],
+  techCards:[{cardId:'c1',version:1,product:'Фарш',outputQty:2,outputUnit:'кг',ingredients:[{ingredientId:'i1',name:'Мясо',quantity:1,unit:'кг'}]}]
+ });
+ ui.renderStage1();
+ assert.match($('ingredientList').innerHTML,/Мясо/);
+ assert.match($('techCardList').innerHTML,/Фарш/);
  assert.deepEqual(writes,[]);
 });
 
