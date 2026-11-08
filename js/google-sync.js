@@ -69,6 +69,65 @@ export function createGoogleSync({api,storage,keys,getState,setState,helpers,ui}
   }catch(error){googleStatus('Восстановление не выполнено: '+error.message)}
   finally{if(btn)btn.disabled=false}
  }
+ let pendingCommentCleanup=null;
+ async function prepareLegacyZeroCommentCleanup(){
+  if(!api.hasToken())throw new Error('Сначала подключи Google.');
+  const rows=await api.read('Records!A1:N');
+  const header=rows[0]||[],data=rows.slice(1),commentIndex=header.indexOf('Комментарий');
+  if(commentIndex<0)throw new Error('В листе Records не найдена колонка «Комментарий».');
+  const state=getState(),localById=new Map(state.records.map(r=>[String(r.id),r])),cloudById=new Map();
+  data.forEach((row,index)=>{const id=String(row[header.indexOf('ID')>=0?header.indexOf('ID'):0]||'');if(id)cloudById.set(id,{row,rowNumber:index+2})});
+  const eligibleIds=new Set(),skippedIds=new Set();
+  for(const [id,entry] of cloudById){
+   if(entry.row[commentIndex]!=='0')continue;
+   const local=localById.get(id);
+   if(local){
+    if(local.comment!=='0'||recordContent({...normalizeRecord(local),comment:''})!==recordContent({...parseSheetRecord(entry.row,header),comment:''})){
+     skippedIds.add(id);continue;
+    }
+   }
+   eligibleIds.add(id);
+  }
+  for(const [id,local] of localById){
+   if(local.comment!=='0')continue;
+   const cloud=cloudById.get(id);
+   if(!cloud){eligibleIds.add(id);continue}
+   if(cloud.row[commentIndex]!=='0'||!eligibleIds.has(id))skippedIds.add(id);
+  }
+  for(const id of skippedIds)eligibleIds.delete(id);
+  const stamps=new Map([...eligibleIds].map(id=>[id,versionNow()]));
+  const cloudUpdates=[];
+  for(const id of eligibleIds){
+   const entry=cloudById.get(id);if(!entry||entry.row[commentIndex]!=='0')continue;
+   const parsed=parseSheetRecord(entry.row,header),clean={...parsed,comment:'',updatedAt:stamps.get(id)};
+   cloudUpdates.push({range:'Records!H'+entry.rowNumber,values:[['']]});
+   cloudUpdates.push({range:'Records!K'+entry.rowNumber+':M'+entry.rowNumber,values:[[id,recordContent(clean),clean.updatedAt]]});
+  }
+  const nextRecords=state.records.map(record=>{
+   const id=String(record.id);
+   return eligibleIds.has(id)&&record.comment==='0'?{...record,comment:'',updatedAt:stamps.get(id)}:record;
+  });
+  pendingCommentCleanup={cloudUpdates,nextRecords,eligibleIds:[...eligibleIds],skippedIds:[...skippedIds]};
+  return {
+   localCount:nextRecords.filter((r,i)=>state.records[i]?.comment==='0'&&r.comment==='').length,
+   cloudCount:cloudUpdates.length/2,
+   skippedCount:skippedIds.size,
+   backup:{app:'KitchenAccounting',type:'before-legacy-comment-cleanup',createdAt:versionNow(),localRecords:state.records,googleRecords:rows}
+  };
+ }
+ async function applyLegacyZeroCommentCleanup(){
+  if(!pendingCommentCleanup)throw new Error('Сначала подготовь очистку и скачай резервную копию.');
+  const pending=pendingCommentCleanup;
+  if(pending.cloudUpdates.length){
+   await api.request('/values:batchUpdate?valueInputOption=RAW',{method:'POST',body:JSON.stringify({valueInputOption:'RAW',data:pending.cloudUpdates})});
+  }
+  const state=getState();
+  setState({records:pending.nextRecords});
+  storage.setItem(keys.records,JSON.stringify(pending.nextRecords));
+  renderAll();
+  pendingCommentCleanup=null;
+  return {localCount:pending.nextRecords.filter((r,i)=>state.records[i]?.comment==='0'&&r.comment==='').length,cloudCount:pending.cloudUpdates.length/2,skippedCount:pending.skippedIds.length};
+ }
  async function syncGoogle(){
   if(!api.hasToken())return;
   if(syncInProgress){syncRequestedAgain=true;return}
@@ -98,5 +157,5 @@ export function createGoogleSync({api,storage,keys,getState,setState,helpers,ui}
   }catch(error){googleStatus('Ошибка синхронизации: '+error.message+'. Локальные данные сохранены.')}
   finally{syncInProgress=false;if(btn)btn.disabled=false;if(syncRequestedAgain){syncRequestedAgain=false;ui.scheduleGoogleSync?.()}}
  }
- return {syncGoogle,syncStage1Sheets,restoreGoogleFromSheet};
+ return {syncGoogle,syncStage1Sheets,restoreGoogleFromSheet,prepareLegacyZeroCommentCleanup,applyLegacyZeroCommentCleanup};
 }
