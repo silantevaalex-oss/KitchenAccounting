@@ -10,6 +10,23 @@ import { createGoogleApi } from './js/google-api.js';
 import { createGoogleSync } from './js/google-sync.js';
 
 const KEY='kitchenAccountingRecordsV1',PKEY='kitchenAccountingProductsV2',DKEY='kitchenAccountingDeletedIdsV1',DMKEY='kitchenAccountingDeletedAtV1';try{localStorage.removeItem('kitchenAccountingNormsV1')}catch(e){}let records=readStore(KEY,[]),products=readStore(PKEY,[]),deletedIds=readStore(DKEY,[]),deletedAt=readStore(DMKEY,{}),editing=null; if(!Array.isArray(records))records=[];if(!Array.isArray(products))products=[];if(!Array.isArray(deletedIds))deletedIds=[];deletedIds=deletedIds.map(String);if(!deletedAt||typeof deletedAt!=='object'||Array.isArray(deletedAt))deletedAt={};const $=id=>document.getElementById(id);
+function resolveRecordSyncConflict({cloud,local,error}){
+ const dialog=$('syncConflictDialog');
+ const details=$('syncConflictDetails');
+ if(!dialog||typeof dialog.showModal!=='function'){
+  return Promise.resolve(window.confirm('Обнаружен конфликт записи '+(local.product||local.id)+'. ОК — взять версию из Google Таблицы. Отмена — оставить мою локальную версию.')?'cloud':'local');
+ }
+ details.textContent=(local.product||local.id)+' · '+(local.stamp||'дата не указана')+'\n'+(error?.message||'Обнаружены разные версии записи.');
+ return new Promise(resolve=>{
+  const cloudButton=$('syncConflictCloud'),localButton=$('syncConflictLocal');
+  const finish=choice=>{dialog.close();resolve(choice)};
+  const onCloud=()=>finish('cloud'),onLocal=()=>finish('local'),onCancel=event=>{event.preventDefault();finish('local')};
+  cloudButton.addEventListener('click',onCloud,{once:true});
+  localButton.addEventListener('click',onLocal,{once:true});
+  dialog.addEventListener('cancel',onCancel,{once:true});
+  dialog.showModal();
+ });
+}
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(records));localStorage.setItem(PKEY,JSON.stringify(products));localStorage.setItem(DKEY,JSON.stringify(deletedIds));localStorage.setItem(DMKEY,JSON.stringify(deletedAt))}catch(e){alert('Не удалось сохранить данные на устройстве. Проверь свободное место и разрешение на хранение данных. Ошибка: '+e.message);return false}renderAll();scheduleGoogleSync?.();return true}
 
 function updateProducts(){$('productOptions').innerHTML=products.slice().sort((a,b)=>a.localeCompare(b,'ru')).map(p=>'<option value="'+esc(p)+'">').join('');}
@@ -118,7 +135,7 @@ const googleSync=createGoogleSync({
  getState:()=>({records,products,deletedIds,deletedAt,ingredients,techCards}),
  setState:next=>{if('records'in next)records=next.records;if('products'in next)products=next.products;if('deletedIds'in next)deletedIds=next.deletedIds;if('deletedAt'in next)deletedAt=next.deletedAt;if('ingredients'in next)ingredients=next.ingredients;if('techCards'in next)techCards=next.techCards;techCardUI.setState(next)},
  helpers:{normalizeRecord,parseSheetRecord,recordContent,mergeRecordLocalWins,versionNow,numberValue,mergeVersioned,ingredientContent,cardContent},
- ui:{$,renderAll,googleStatus,scheduleGoogleSync}
+ ui:{$,renderAll,googleStatus,scheduleGoogleSync,resolveRecordConflict:resolveRecordSyncConflict}
 });
 const syncStage1Sheets=googleSync.syncStage1Sheets;
 const syncGoogle=googleSync.syncGoogle;
