@@ -60,7 +60,31 @@ function buildPdfReport(){
  const productRows=[...by.entries()].sort((a,b)=>a[0].localeCompare(b[0],'ru')).map(([name,x])=>'<tr><td>'+esc(name)+'</td><td>'+x.count+'</td><td>'+kg(x.actual)+'</td><td>'+kg(x.plan)+'</td><td>'+(x.actual-x.plan>0?'+':'')+kg(x.actual-x.plan)+'</td></tr>').join('');
  $('pdfReport').innerHTML='<div class="pdf-report-head"><h1>Отчёт по обработке продуктов</h1><p>Период: '+esc(start)+' — '+esc(end)+' · '+esc(product)+'</p><p>Сформировано: '+esc(new Date().toLocaleString('ru-RU'))+'</p></div><div class="pdf-kpis"><div><span>Фактический выход</span><b>'+kg(sumActual)+' кг</b></div><div><span>Плановый выход</span><b>'+kg(sumPlan)+' кг</b></div><div><span>Отклонение</span><b>'+(diff>0?'+':'')+kg(diff)+' кг</b></div><div><span>Выполнение плана</span><b>'+(att===null?'—':att.toLocaleString('ru-RU',{maximumFractionDigits:1})+'%')+'</b></div><div><span>Количество обработок</span><b>'+rs.length+'</b></div></div><h2>Итоги по продуктам</h2><table><thead><tr><th>Продукт</th><th>Обработок</th><th>Факт, кг</th><th>План, кг</th><th>Отклонение, кг</th></tr></thead><tbody>'+(productRows||'<tr><td colspan="5">Нет данных за выбранный период</td></tr>')+'</tbody></table><h2>Подробные записи</h2><table><thead><tr><th>Дата и время</th><th>Продукт</th><th>Факт, кг</th><th>План, кг</th><th>Отклонение, кг</th><th>Шт.</th></tr></thead><tbody>'+(rows||'<tr><td colspan="6">Нет данных</td></tr>')+'</tbody></table>';
 }
-$('exportPdf').addEventListener('click',()=>{const start=$('statsStart').value,end=$('statsEnd').value;if(start&&end&&start>end){alert('Начальная дата позже конечной — проверь период.');return}buildPdfReport();window.print()});
+function openPdfReport(){
+ const reportWindow=window.open('','_blank');
+ if(!reportWindow){alert('Safari заблокировал новое окно. Разреши всплывающие окна для этого сайта и повтори попытку.');return}
+ const report=$('pdfReport').innerHTML;
+ const page='<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Отчёт KitchenAccounting</title><style>'+
+ 'body{margin:0;padding:16px;background:#f4f5f6;color:#222;font:14px -apple-system,BlinkMacSystemFont,Arial,sans-serif}'+
+ '.toolbar{position:sticky;top:0;z-index:2;background:#fff;padding:12px;margin:-16px -16px 16px;border-bottom:1px solid #ddd;display:flex;flex-direction:column;gap:8px}'+
+ '.toolbar button{border:0;border-radius:10px;background:#26734d;color:#fff;padding:13px;font:600 15px inherit}'+
+ '.toolbar p{margin:0;color:#555;font-size:13px;line-height:1.4}'+
+ '#pdfReport{max-width:900px;margin:0 auto;background:#fff;padding:18px;border-radius:10px}'+
+ '#pdfReport h1{font-size:22px;margin:0 0 8px}#pdfReport h2{font-size:17px;margin:20px 0 8px}'+
+ '#pdfReport p{font-size:13px;margin:5px 0;color:#444}'+
+ '#pdfReport table{width:100%;border-collapse:collapse;margin:8px 0 18px;font-size:12px}'+
+ '#pdfReport th,#pdfReport td{border:1px solid #ccc;padding:6px;text-align:left;vertical-align:top}'+
+ '#pdfReport th{background:#f1f1ed}'+
+ '.pdf-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:14px 0}'+
+ '.pdf-kpis div{border:1px solid #ddd;padding:9px}.pdf-kpis span{display:block;font-size:11px;color:#555;margin-bottom:4px}.pdf-kpis b{font-size:15px}'+
+ '@media print{@page{size:A4;margin:12mm}body{padding:0;background:#fff;font-size:10pt}.toolbar{display:none!important}#pdfReport{max-width:none;padding:0;border-radius:0}#pdfReport table{font-size:8pt;break-inside:auto}#pdfReport tr{break-inside:avoid}#pdfReport h2{break-after:avoid}}'+
+ '@media(max-width:520px){#pdfReport{padding:12px}#pdfReport table{font-size:10px}#pdfReport th,#pdfReport td{padding:4px}}'+
+ '</style></head><body><div class="toolbar"><button id="printReport" type="button">Печать / Сохранить PDF</button><p>На iPhone: нажми кнопку выше. Если печать не открылась, нажми «Поделиться» в Safari и выбери «Печать».</p></div><main id="pdfReport">'+report+'</main></body></html>';
+ reportWindow.document.open();reportWindow.document.write(page);reportWindow.document.close();
+ const printButton=reportWindow.document.getElementById('printReport');
+ if(printButton)printButton.addEventListener('click',()=>reportWindow.print());
+}
+$('exportPdf').addEventListener('click',()=>{const start=$('statsStart').value,end=$('statsEnd').value;if(start&&end&&start>end){alert('Начальная дата позже конечной — проверь период.');return}buildPdfReport();openPdfReport()});
 function csv(){let rows=[['Дата и время','Продукт','Фактический выход, кг','Плановый выход, кг','Отклонение, кг','Кол-во (шт)','Вес 1 шт (кг)','Комментарий']];statsRecords().forEach(r=>{let actual=totalRecordActual(r),plan=numberValue(r.plannedYield??r.layout1);rows.push([String(r.stamp||'').replace('T',' '),r.product,actual,plan,actual-plan,Number(r.steaks)||0,Number(r.unitWeight)||0,r.comment||''])});let data='\ufeff'+rows.map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\r\n'),url=URL.createObjectURL(new Blob([data],{type:'text/csv;charset=utf-8;'})),a=document.createElement('a');a.href=url;a.download='KitchenAccounting-report-'+nowLocal().slice(0,10)+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 $('exportCsv').onclick=csv;$('productStats').addEventListener('click',e=>{if(e.target.closest('#productStatsSort')){productStatsSort=productStatsSort==='desc'?'asc':'desc';renderStats()}});$('statsWeek').onclick=()=>{let end=new Date(),start=new Date(end);start.setDate(start.getDate()-6);$('statsStart').value=dateStr(start);$('statsEnd').value=dateStr(end);renderStats()};$('statsMonth').onclick=()=>{let end=new Date(),start=new Date(end.getFullYear(),end.getMonth(),1,12);$('statsStart').value=dateStr(start);$('statsEnd').value=dateStr(end);renderStats()};
 function downloadBackup(){const payload={app:'KitchenAccounting',version:4,createdAt:new Date().toISOString(),records,products,deletedIds,deletedAt,ingredients,techCards};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='KitchenAccounting-backup-'+nowLocal().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);$('backupStatus').textContent='Полная резервная копия создана: '+records.length+' обработок, '+products.length+' продуктов, '+ingredients.length+' ингредиентов, '+techCards.length+' версий техкарт.'}
