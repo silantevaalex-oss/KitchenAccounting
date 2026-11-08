@@ -1,5 +1,5 @@
-const CACHE='kitchen-accounting-v121';
-const APP_SHELL=['./','./index.html','./styles.css?v=121','./app.js?v=121','./manifest.webmanifest','./icon.svg'];
+const CACHE='kitchen-accounting-v122';
+const APP_SHELL=['./','./index.html','./styles.css?v=122','./app.js?v=122','./manifest.webmanifest','./icon.svg'];
 
 self.addEventListener('install',event=>{
   event.waitUntil((async()=>{
