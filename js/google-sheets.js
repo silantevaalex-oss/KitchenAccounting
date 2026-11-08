@@ -12,7 +12,7 @@ export function normalizeRecord(record){
   layout2:numberValue(fieldValue(record,['layout2','Раскладка 2'])),layout3:numberValue(fieldValue(record,['layout3','Раскладка 3'])),layout4:numberValue(fieldValue(record,['layout4','Раскладка 4'])),
   stamp:String(fieldValue(record,['stamp','Дата и время','Дата','date'])),comment:String(fieldValue(record,['comment','Комментарий','комментарий'])),
   steaks:numberValue(fieldValue(record,['steaks','Кол-во (шт)','Шт','Стейки, шт','Стейки'])),
-  unitWeight:(record.unitWeight!==undefined||record['Вес 1 шт (кг)']!==undefined||record['Вес одной штуки (кг)']!==undefined)?numberValue(fieldValue(record,['unitWeight','Вес 1 шт (кг)','Вес одной штуки (кг)'])):undefined,
+  unitWeight:numberValue(fieldValue(record,['unitWeight','Вес 1 шт (кг)','Вес одной штуки (кг)'])),
   techCardScale:(()=>{const value=fieldValue(record,['techCardScale','Пересчёт по техкарте']);if(value&&typeof value==='object')return value;if(typeof value==='string'&&value.trim()){try{return JSON.parse(value)}catch(_){return null}}return null})(),
   updatedAt:String(fieldValue(record,['updatedAt','Время изменения']))
  };

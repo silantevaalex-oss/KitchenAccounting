@@ -10,6 +10,23 @@ import { createGoogleApi } from './js/google-api.js';
 import { createGoogleSync } from './js/google-sync.js';
 
 const KEY='kitchenAccountingRecordsV1',PKEY='kitchenAccountingProductsV2',DKEY='kitchenAccountingDeletedIdsV1',DMKEY='kitchenAccountingDeletedAtV1';try{localStorage.removeItem('kitchenAccountingNormsV1')}catch(e){}let records=readStore(KEY,[]),products=readStore(PKEY,[]),deletedIds=readStore(DKEY,[]),deletedAt=readStore(DMKEY,{}),editing=null; if(!Array.isArray(records))records=[];if(!Array.isArray(products))products=[];if(!Array.isArray(deletedIds))deletedIds=[];deletedIds=deletedIds.map(String);if(!deletedAt||typeof deletedAt!=='object'||Array.isArray(deletedAt))deletedAt={};const $=id=>document.getElementById(id);
+function resolveRecordSyncConflict({cloud,local,error}){
+ const dialog=$('syncConflictDialog');
+ const details=$('syncConflictDetails');
+ if(!dialog||typeof dialog.showModal!=='function'){
+  return Promise.resolve(window.confirm('Обнаружен конфликт записи '+(local.product||local.id)+'. ОК — взять версию из Google Таблицы. Отмена — оставить мою локальную версию.')?'cloud':'local');
+ }
+ details.textContent=(local.product||local.id)+' · '+(local.stamp||'дата не указана')+'\n'+(error?.message||'Обнаружены разные версии записи.');
+ return new Promise(resolve=>{
+  const cloudButton=$('syncConflictCloud'),localButton=$('syncConflictLocal');
+  const finish=choice=>{dialog.close();resolve(choice)};
+  const onCloud=()=>finish('cloud'),onLocal=()=>finish('local'),onCancel=event=>{event.preventDefault();finish('local')};
+  cloudButton.addEventListener('click',onCloud,{once:true});
+  localButton.addEventListener('click',onLocal,{once:true});
+  dialog.addEventListener('cancel',onCancel,{once:true});
+  dialog.showModal();
+ });
+}
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(records));localStorage.setItem(PKEY,JSON.stringify(products));localStorage.setItem(DKEY,JSON.stringify(deletedIds));localStorage.setItem(DMKEY,JSON.stringify(deletedAt))}catch(e){alert('Не удалось сохранить данные на устройстве. Проверь свободное место и разрешение на хранение данных. Ошибка: '+e.message);return false}renderAll();scheduleGoogleSync?.();return true}
 
 function updateProducts(){$('productOptions').innerHTML=products.slice().sort((a,b)=>a.localeCompare(b,'ru')).map(p=>'<option value="'+esc(p)+'">').join('');}
@@ -84,6 +101,22 @@ function csv(){let rows=[['Дата и время','Продукт','Факти�
 $('exportCsv').onclick=csv;$('productStats').addEventListener('click',e=>{if(e.target.closest('#productStatsSort')){productStatsSort=productStatsSort==='desc'?'asc':'desc';renderStats()}});$('statsWeek').onclick=()=>{let end=new Date(),start=new Date(end);start.setDate(start.getDate()-6);$('statsStart').value=dateStr(start);$('statsEnd').value=dateStr(end);renderStats()};$('statsMonth').onclick=()=>{let end=new Date(),start=new Date(end.getFullYear(),end.getMonth(),1,12);$('statsStart').value=dateStr(start);$('statsEnd').value=dateStr(end);renderStats()};
 function downloadBackup(){const payload={app:'KitchenAccounting',version:4,createdAt:new Date().toISOString(),records,products,deletedIds,deletedAt,ingredients,techCards};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='KitchenAccounting-backup-'+nowLocal().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);$('backupStatus').textContent='Полная резервная копия создана: '+records.length+' обработок, '+products.length+' продуктов, '+ingredients.length+' ингредиентов, '+techCards.length+' версий техкарт.'}
 $('exportBackup').onclick=downloadBackup;
+$('cleanupLegacyComments').addEventListener('click',async()=>{
+ if(!googleApi.hasToken())return alert('Сначала подключи Google к приложению.');
+ if(!confirm('Сейчас будет подготовлен отдельный файл с локальными записями и строками листа Records. Убедись, что сохранишь этот файл до очистки. Продолжить?'))return;
+ const button=$('cleanupLegacyComments');button.disabled=true;
+ try{
+  const prepared=await googleSync.prepareLegacyZeroCommentCleanup();
+  const blob=new Blob([JSON.stringify(prepared.backup,null,2)],{type:'application/json;charset=utf-8'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='KitchenAccounting-before-comment-cleanup-'+nowLocal().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);
+  if(!prepared.localCount&&!prepared.cloudCount){alert('Подходящих комментариев «0» нет. Пропущено из-за несовпадения версий: '+prepared.skippedCount+'.');return}
+  if(!confirm('Резервный файл подготовлен. Проверь, что он сохранён. Будут очищены только комментарии, которые строго равны тексту «0». Локально: '+prepared.localCount+'; в Google Таблице: '+prepared.cloudCount+'. Пропущено конфликтных записей: '+prepared.skippedCount+'. Выполнить очистку?'))return;
+  const result=await googleSync.applyLegacyZeroCommentCleanup();
+  alert('Готово. Очищено комментариев: локально '+result.localCount+', в таблице '+result.cloudCount+'. Конфликтных записей пропущено: '+result.skippedCount+'.');
+ }catch(error){alert('Очистка не выполнена: '+error.message)}
+ finally{button.disabled=false}
+});
+
 $('importBackupBtn').onclick=()=>$('importBackupFile').click();
 $('importBackupFile').addEventListener('change',async e=>{const file=e.target.files&&e.target.files[0];if(!file)return;try{const data=JSON.parse(await file.text());if(!data||data.app!=='KitchenAccounting'||!Array.isArray(data.records)||!Array.isArray(data.products))throw new Error('Файл не похож на резервную копию KitchenAccounting.');const nextDeleted=[...new Set([...deletedIds,...(Array.isArray(data.deletedIds)?data.deletedIds.map(String):[])])],nextDeletedAt={...deletedAt,...(data.deletedAt&&typeof data.deletedAt==='object'?data.deletedAt:{})},known=new Map(records.map((r,i)=>[String(r.id),i]));let added=0,updated=0;const nextRecords=records.slice();for(const source of data.records){if(!source||source.id===undefined||nextDeleted.includes(String(source.id))||typeof source.product!=='string'||!Number.isFinite(Number(source.actualYield??source.yield))||!Number.isFinite(Number(source.plannedYield??source.layout1))||!Number.isFinite(Number(source.steaks??0)))continue;const r={...source,id:String(source.id),product:source.product.trim(),actualYield:Number(source.actualYield??source.yield),yield:Number(source.actualYield??source.yield),plannedYield:Number(source.plannedYield??source.layout1),steaks:Number(source.steaks??0),unitWeight:Number(source.unitWeight??source.weightPerPiece??0)||0,stamp:String(source.stamp||''),comment:String(source.comment||''),updatedAt:String(source.updatedAt||versionNow())};if(known.has(r.id)){const index=known.get(r.id);nextRecords[index]=mergeRecordLocalWins(nextRecords[index],r);updated++}else{known.set(r.id,nextRecords.length);nextRecords.push(r);added++}}const nextProducts=products.slice();let productAdded=0;for(const p of data.products){if(typeof p==='string'&&p.trim()&&!nextProducts.some(x=>x.toLocaleLowerCase()===p.trim().toLocaleLowerCase())){nextProducts.push(p.trim());productAdded++}}const nextIngredients=ingredients.slice(),ingredientIds=new Map(nextIngredients.map((x,i)=>[String(x.id),i]));let ingredientAdded=0,ingredientUpdated=0;if(Array.isArray(data.ingredients))for(const source of data.ingredients){if(!source||source.id===undefined||typeof source.name!=='string'||!source.name.trim())continue;const item={...source,id:String(source.id),name:source.name.trim(),unit:String(source.unit||'кг'),active:source.active!==false,updatedAt:String(source.updatedAt||versionNow())};if(ingredientIds.has(item.id)){const index=ingredientIds.get(item.id);nextIngredients[index]=mergeVersioned(item,nextIngredients[index],'ингредиента '+item.name,ingredientContent);ingredientUpdated++}else{ingredientIds.set(item.id,nextIngredients.length);nextIngredients.push(item);ingredientAdded++}}const nextCards=techCards.slice(),cardIds=new Map(nextCards.map((x,i)=>[String(x.cardId)+'|'+String(x.version),i]));let cardsAdded=0,cardsUpdated=0;if(Array.isArray(data.techCards))for(const source of data.techCards){if(!source||source.cardId===undefined||!Number.isFinite(Number(source.version))||typeof source.product!=='string'||!Array.isArray(source.ingredients))continue;const item={...source,cardId:String(source.cardId),version:Number(source.version),ingredients:source.ingredients.filter(x=>x&&typeof x.name==='string').map(x=>({...x})),updatedAt:String(source.updatedAt||versionNow())},key=item.cardId+'|'+item.version;if(cardIds.has(key)){const index=cardIds.get(key);nextCards[index]=mergeVersioned(item,nextCards[index],'техкарты '+item.product+' / v'+item.version,cardContent);cardsUpdated++}else{cardIds.set(key,nextCards.length);nextCards.push(item);cardsAdded++}}const filteredRecords=nextRecords.filter(r=>!nextDeleted.includes(String(r.id)));localStorage.setItem(KEY,JSON.stringify(filteredRecords));localStorage.setItem(PKEY,JSON.stringify(nextProducts));localStorage.setItem(DKEY,JSON.stringify(nextDeleted));localStorage.setItem(DMKEY,JSON.stringify(nextDeletedAt));localStorage.setItem(INGKEY,JSON.stringify(nextIngredients));localStorage.setItem(TCKEY,JSON.stringify(nextCards));records=filteredRecords;products=nextProducts;deletedIds=nextDeleted;deletedAt=nextDeletedAt;ingredients=nextIngredients;techCards=nextCards;techCardUI.setState({ingredients,techCards});renderAll();scheduleGoogleSync();$('backupStatus').textContent='Восстановлено: обработок +'+added+' / обновлено '+updated+'; продуктов +'+productAdded+'; ингредиентов +'+ingredientAdded+' / обновлено '+ingredientUpdated+'; техкарт +'+cardsAdded+' / обновлено '+cardsUpdated+'.';alert($('backupStatus').textContent)}catch(err){alert('Не удалось восстановить копию: '+err.message)}finally{e.target.value=''}});
 $('filterDate').oninput=renderJournal;$('clearFilter').onclick=()=>{$('filterDate').value='';renderJournal()};$('statsStart').value=dateStr(new Date(new Date().getFullYear(),new Date().getMonth(),1,12));$('statsEnd').value=nowLocal().slice(0,10);['statsStart','statsEnd','statsProduct'].forEach(id=>$(id).addEventListener(id==='statsProduct'?'change':'input',renderStats));
@@ -118,7 +151,7 @@ const googleSync=createGoogleSync({
  getState:()=>({records,products,deletedIds,deletedAt,ingredients,techCards}),
  setState:next=>{if('records'in next)records=next.records;if('products'in next)products=next.products;if('deletedIds'in next)deletedIds=next.deletedIds;if('deletedAt'in next)deletedAt=next.deletedAt;if('ingredients'in next)ingredients=next.ingredients;if('techCards'in next)techCards=next.techCards;techCardUI.setState(next)},
  helpers:{normalizeRecord,parseSheetRecord,recordContent,mergeRecordLocalWins,versionNow,numberValue,mergeVersioned,ingredientContent,cardContent},
- ui:{$,renderAll,googleStatus,scheduleGoogleSync}
+ ui:{$,renderAll,googleStatus,scheduleGoogleSync,resolveRecordConflict:resolveRecordSyncConflict}
 });
 const syncStage1Sheets=googleSync.syncStage1Sheets;
 const syncGoogle=googleSync.syncGoogle;

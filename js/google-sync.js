@@ -3,6 +3,17 @@ export function createGoogleSync({api,storage,keys,getState,setState,helpers,ui}
  const {normalizeRecord,parseSheetRecord,recordContent,mergeRecordLocalWins,versionNow,numberValue,mergeVersioned,ingredientContent,cardContent}=helpers;
  const {$,renderAll,googleStatus}=ui;
  let syncInProgress=false,syncRequestedAgain=false;
+ async function mergeRecordWithChoice(cloud,local){
+  try{return mergeRecordLocalWins(cloud,local)}
+  catch(error){
+   const isVersionConflict=/без подтверждённой версии|Конфликт|без версии/.test(error.message||'');
+   if(!isVersionConflict||typeof ui.resolveRecordConflict!=='function')throw error;
+   const choice=await ui.resolveRecordConflict({cloud,local,error});
+   if(choice==='cloud')return {...normalizeRecord(cloud),updatedAt:versionNow()};
+   if(choice==='local')return {...normalizeRecord(local),updatedAt:versionNow()};
+   throw error;
+  }
+ }
  async function removeNormsSheet(){
   if(storage.getItem('normsRemoved')==='1')return false;
   const meta=await api.request('?fields=sheets.properties(sheetId,title)');
@@ -48,7 +59,7 @@ export function createGoogleSync({api,storage,keys,getState,setState,helpers,ui}
    state.records.forEach(local=>{const id=String(local.id||'');if(!id)return;const cloud=restoredMap.get(id);restoredMap.set(id,cloud?mergeRecordLocalWins(cloud,normalizeRecord(local)):normalizeRecord(local))});
    state.deletedIds=[...new Set(state.deletedIds)];state.deletedIds.forEach(id=>restoredMap.delete(id));
    const restored=[...restoredMap.values()].sort((a,b)=>a.stamp.localeCompare(b.stamp));
-   if(!restored.length)throw new Error('В таблице не найдены записи в диапазоне Records!A2:H. Локальные данные не изменены.');
+   if(!restored.length)throw new Error('В таблице не найдены записи в диапазоне Records!A2:O. Локальные данные не изменены.');
    if(!restored.some(r=>r.actualYield!==0||r.plannedYield!==0||r.steaks!==0))throw new Error('Google вернул записи, но выходы и количество во всех строках равны нулю. Локальные данные не изменены.');
    const restoredProducts=[...new Set([...cloudProducts.map(r=>String(r[0]||'').trim()),...restored.map(r=>r.product)].filter(Boolean))];
    state.records=restored;state.products=[...new Set([...restoredProducts,...state.products])];setState({records:state.records,products:state.products,deletedIds:state.deletedIds,deletedAt:state.deletedAt});
@@ -57,6 +68,69 @@ export function createGoogleSync({api,storage,keys,getState,setState,helpers,ui}
    googleStatus('Восстановлено из Google: '+state.records.length+' записей. Таблица Google не изменялась.');
   }catch(error){googleStatus('Восстановление не выполнено: '+error.message)}
   finally{if(btn)btn.disabled=false}
+ }
+ let pendingCommentCleanup=null;
+ async function prepareLegacyZeroCommentCleanup(){
+  if(!api.hasToken())throw new Error('Сначала подключи Google.');
+  const rows=await api.read('Records!A1:N');
+  const header=rows[0]||[],data=rows.slice(1),commentIndex=header.indexOf('Комментарий');
+  if(commentIndex<0)throw new Error('В листе Records не найдена колонка «Комментарий».');
+  const state=getState(),localById=new Map(state.records.map(r=>[String(r.id),r])),cloudById=new Map();
+  data.forEach((row,index)=>{const id=String(row[header.indexOf('ID')>=0?header.indexOf('ID'):0]||''),statusIndex=header.indexOf('Статус');if(id&&String(row[statusIndex>=0?statusIndex:8]||'').toUpperCase()!=='DELETE')cloudById.set(id,{row,rowNumber:index+2})});
+  const eligibleIds=new Set(),skippedIds=new Set();
+  const deletedSet=new Set((state.deletedIds||[]).map(String));
+  for(const [id,entry] of cloudById){
+   if(entry.row[commentIndex]!=='0')continue;
+   if(deletedSet.has(id)){skippedIds.add(id);continue}
+   const local=localById.get(id);
+   if(local){
+    if(local.comment!=='0'||recordContent({...normalizeRecord(local),comment:''})!==recordContent({...parseSheetRecord(entry.row,header),comment:''})){
+     skippedIds.add(id);continue;
+    }
+   }
+   eligibleIds.add(id);
+  }
+  for(const [id,local] of localById){
+   if(local.comment!=='0')continue;
+   if(deletedSet.has(id)){skippedIds.add(id);continue}
+   const cloud=cloudById.get(id);
+   if(!cloud){eligibleIds.add(id);continue}
+   if(cloud.row[commentIndex]!=='0'||!eligibleIds.has(id))skippedIds.add(id);
+  }
+  for(const id of skippedIds)eligibleIds.delete(id);
+  const stamps=new Map([...eligibleIds].map(id=>[id,versionNow()]));
+  const cloudUpdates=[];
+  for(const id of eligibleIds){
+   const entry=cloudById.get(id);if(!entry||entry.row[commentIndex]!=='0')continue;
+   const parsed=parseSheetRecord(entry.row,header),clean={...parsed,comment:'',updatedAt:stamps.get(id)};
+   cloudUpdates.push({range:'Records!H'+entry.rowNumber,values:[['']]});
+   cloudUpdates.push({range:'Records!K'+entry.rowNumber+':M'+entry.rowNumber,values:[[id,recordContent(clean),clean.updatedAt]]});
+  }
+  const nextRecords=state.records.map(record=>{
+   const id=String(record.id);
+   return eligibleIds.has(id)&&record.comment==='0'?{...record,comment:'',updatedAt:stamps.get(id)}:record;
+  });
+  const localCount=nextRecords.filter((r,i)=>state.records[i]?.comment==='0'&&r.comment==='').length;
+  pendingCommentCleanup={cloudUpdates,nextRecords,eligibleIds:[...eligibleIds],skippedIds:[...skippedIds],localCount};
+  return {
+   localCount,
+   cloudCount:cloudUpdates.length/2,
+   skippedCount:skippedIds.size,
+   backup:{app:'KitchenAccounting',type:'before-legacy-comment-cleanup',createdAt:versionNow(),localRecords:state.records,googleRecords:rows}
+  };
+ }
+ async function applyLegacyZeroCommentCleanup(){
+  if(!pendingCommentCleanup)throw new Error('Сначала подготовь очистку и скачай резервную копию.');
+  const pending=pendingCommentCleanup;
+  if(pending.cloudUpdates.length){
+   await api.request('/values:batchUpdate?valueInputOption=RAW',{method:'POST',body:JSON.stringify({valueInputOption:'RAW',data:pending.cloudUpdates})});
+  }
+  const state=getState();
+  setState({records:pending.nextRecords});
+  storage.setItem(keys.records,JSON.stringify(pending.nextRecords));
+  renderAll();ui.scheduleGoogleSync?.();
+  pendingCommentCleanup=null;
+  return {localCount:pending.localCount,cloudCount:pending.cloudUpdates.length/2,skippedCount:pending.skippedIds.length};
  }
  async function syncGoogle(){
   if(!api.hasToken())return;
@@ -70,7 +144,7 @@ export function createGoogleSync({api,storage,keys,getState,setState,helpers,ui}
    const localDeleted=new Map(Object.entries(state.deletedAt||{}).map(([id,at])=>[String(id),String(at||'')]));
    state.deletedIds.forEach(id=>{if(!localDeleted.has(String(id)))localDeleted.set(String(id),'')});
    cloudDeleted.forEach((at,id)=>{if(!localDeleted.has(id)||String(at)>String(localDeleted.get(id)||''))localDeleted.set(id,at)});
-   state.records.forEach(r=>{const local=normalizeRecord(r),id=String(local.id),cloud=recordMap.get(id);if(cloud)recordMap.set(id,mergeRecordLocalWins(cloud,local));else recordMap.set(id,{...local,updatedAt:local.updatedAt||versionNow()})});
+   for(const r of state.records){const local=normalizeRecord(r),id=String(local.id),cloud=recordMap.get(id);if(cloud)recordMap.set(id,await mergeRecordWithChoice(cloud,local));else recordMap.set(id,{...local,updatedAt:local.updatedAt||versionNow()})}
    for(const [id,deletedTime] of localDeleted){const record=recordMap.get(id);if(!record)continue;const recordTime=String(record.updatedAt||'');if(!deletedTime||!recordTime||deletedTime>=recordTime)recordMap.delete(id);else localDeleted.delete(id)}
    const productMap=new Map();
    cloudProducts.forEach(row=>{if(row[0])productMap.set(String(row[0]).toLocaleLowerCase(),String(row[0]))});
@@ -87,5 +161,5 @@ export function createGoogleSync({api,storage,keys,getState,setState,helpers,ui}
   }catch(error){googleStatus('Ошибка синхронизации: '+error.message+'. Локальные данные сохранены.')}
   finally{syncInProgress=false;if(btn)btn.disabled=false;if(syncRequestedAgain){syncRequestedAgain=false;ui.scheduleGoogleSync?.()}}
  }
- return {syncGoogle,syncStage1Sheets,restoreGoogleFromSheet};
+ return {syncGoogle,syncStage1Sheets,restoreGoogleFromSheet,prepareLegacyZeroCommentCleanup,applyLegacyZeroCommentCleanup};
 }

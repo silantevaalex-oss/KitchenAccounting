@@ -1,7 +1,7 @@
 name: Tests
 on:
   push:
-    branches: [main, stage-4-technical-hardening]
+    branches: [main, stage-4-technical-hardening, sync-audit-nov-2026]
   pull_request:
     branches: [main]
 jobs:
