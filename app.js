@@ -109,7 +109,7 @@ const googleSync=createGoogleSync({
  getState:()=>({records,products,deletedIds,deletedAt,ingredients,techCards}),
  setState:next=>{if('records'in next)records=next.records;if('products'in next)products=next.products;if('deletedIds'in next)deletedIds=next.deletedIds;if('deletedAt'in next)deletedAt=next.deletedAt;if('ingredients'in next)ingredients=next.ingredients;if('techCards'in next)techCards=next.techCards},
  helpers:{normalizeRecord,parseSheetRecord,recordContent,mergeRecordLocalWins,versionNow,numberValue,mergeVersioned,ingredientContent,cardContent},
- ui:{$,renderAll,googleStatus}
+ ui:{$,renderAll,googleStatus,scheduleGoogleSync}
 });
 const syncStage1Sheets=googleSync.syncStage1Sheets;
 const syncGoogle=googleSync.syncGoogle;
