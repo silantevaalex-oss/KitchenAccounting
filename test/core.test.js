@@ -117,6 +117,7 @@ test('tech card fingerprints normalize fields and latest active version is selec
  const card={cardId:'c1',version:1,product:'Котлеты',outputQty:'2,5',outputUnit:'кг',ingredients:[{ingredientId:'i',name:'Мясо',quantity:'1,25',unit:'кг'}]};
  assert.equal(cardContent(card),cardContent({...card,outputQty:2.5,ingredients:[{...card.ingredients[0],quantity:1.25}]}));
  assert.equal(ingredientContent({id:'i',name:'Мясо'}),ingredientContent({id:'i',name:'Мясо',unit:'кг',active:true,category:''}));
- const latest=activeTechCards([{...card,version:1},{...card,version:2},{...card,version:3,active:false},{...card,cardId:'c2',product:'Бульон',version:1}]);
+ const latest=activeTechCards([{...card,version:1},{...card,version:2},{...card,cardId:'c2',product:'Бульон',version:1},{...card,cardId:'c3',product:'Суп',version:1,active:false}]);
  assert.deepEqual(latest.map(x=>[x.cardId,x.version]),[['c2',1],['c1',2]]);
+ assert.equal(latest.some(x=>x.cardId==='c3'),false);
 });
