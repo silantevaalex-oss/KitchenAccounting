@@ -78,8 +78,10 @@ export function createGoogleSync({api,storage,keys,getState,setState,helpers,ui}
   const state=getState(),localById=new Map(state.records.map(r=>[String(r.id),r])),cloudById=new Map();
   data.forEach((row,index)=>{const id=String(row[header.indexOf('ID')>=0?header.indexOf('ID'):0]||''),statusIndex=header.indexOf('Статус');if(id&&String(row[statusIndex>=0?statusIndex:8]||'').toUpperCase()!=='DELETE')cloudById.set(id,{row,rowNumber:index+2})});
   const eligibleIds=new Set(),skippedIds=new Set();
+  const deletedSet=new Set((state.deletedIds||[]).map(String));
   for(const [id,entry] of cloudById){
    if(entry.row[commentIndex]!=='0')continue;
+   if(deletedSet.has(id)){skippedIds.add(id);continue}
    const local=localById.get(id);
    if(local){
     if(local.comment!=='0'||recordContent({...normalizeRecord(local),comment:''})!==recordContent({...parseSheetRecord(entry.row,header),comment:''})){
@@ -90,6 +92,7 @@ export function createGoogleSync({api,storage,keys,getState,setState,helpers,ui}
   }
   for(const [id,local] of localById){
    if(local.comment!=='0')continue;
+   if(deletedSet.has(id)){skippedIds.add(id);continue}
    const cloud=cloudById.get(id);
    if(!cloud){eligibleIds.add(id);continue}
    if(cloud.row[commentIndex]!=='0'||!eligibleIds.has(id))skippedIds.add(id);
@@ -125,7 +128,7 @@ export function createGoogleSync({api,storage,keys,getState,setState,helpers,ui}
   const state=getState();
   setState({records:pending.nextRecords});
   storage.setItem(keys.records,JSON.stringify(pending.nextRecords));
-  renderAll();
+  renderAll();ui.scheduleGoogleSync?.();
   pendingCommentCleanup=null;
   return {localCount:pending.localCount,cloudCount:pending.cloudUpdates.length/2,skippedCount:pending.skippedIds.length};
  }
