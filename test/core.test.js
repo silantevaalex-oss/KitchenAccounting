@@ -7,6 +7,7 @@ import { mergeVersioned } from '../js/sync-merge.js';
 import { buildJournalHtml } from '../js/journal.js';
 import { normalizeRecord, parseSheetRecord, recordContent } from '../js/google-sheets.js';
 import { ingredientContent, cardContent, activeTechCards } from '../js/tech-cards.js';
+import { createGoogleApi } from '../js/google-api.js';
 
 test('numberValue accepts decimal commas and grouped spaces',()=>{
  assert.equal(numberValue('1 234,5'),1234.5);
@@ -120,4 +121,33 @@ test('tech card fingerprints normalize fields and latest active version is selec
  const latest=activeTechCards([{...card,version:1},{...card,version:2},{...card,cardId:'c2',product:'Бульон',version:1},{...card,cardId:'c3',product:'Суп',version:1,active:false}]);
  assert.deepEqual(latest.map(x=>[x.cardId,x.version]),[['c2',1],['c1',2]]);
  assert.equal(latest.some(x=>x.cardId==='c3'),false);
+});
+
+test('Google API requires an in-memory access token',async()=>{
+ const api=createGoogleApi({clientId:'client',sheetId:'sheet',scope:'scope',getToken:()=>null,setToken:()=>{},fetchImpl:async()=>{throw new Error('fetch must not run')}});
+ await assert.rejects(api.request('/values/A1'),/Сначала подключи Google/);
+ assert.equal(api.hasToken(),false);
+});
+test('Google API reads ranges with authorization and JSON headers',async()=>{
+ let requested;
+ const api=createGoogleApi({clientId:'client',sheetId:'sheet id',scope:'scope',getToken:()=>'test-token',setToken:()=>{},fetchImpl:async(url,options)=>{requested={url,options};return{ok:true,status:200,json:async()=>({values:[['A'],['B']]})}}});
+ assert.deepEqual(await api.read('Records!A1:A'),[['A'],['B']]);
+ assert.match(requested.url,/https:\/\/sheets\.googleapis\.com\/v4\/spreadsheets\/sheet id\/values\/Records!A1%3AA/);
+ assert.equal(requested.options.headers.Authorization,'Bearer test-token');
+ assert.equal(requested.options.headers['Content-Type'],'application/json');
+});
+test('Google API writes rows with RAW value input',async()=>{
+ let requested;
+ const api=createGoogleApi({clientId:'client',sheetId:'sheet',scope:'scope',getToken:()=>'token',setToken:()=>{},fetchImpl:async(url,options)=>{requested={url,options};return{ok:true,status:200,json:async()=>({updatedRows:1})}}});
+ const result=await api.write('Products!A1',[['Название'],['Свинина']]);
+ assert.equal(result.updatedRows,1);
+ assert.match(requested.url,/valueInputOption=RAW/);
+ assert.equal(requested.options.method,'PUT');
+ assert.deepEqual(JSON.parse(requested.options.body).values,[['Название'],['Свинина']]);
+});
+test('Google API clears expired token and reports unauthorized state',async()=>{
+ let token='expired',cleared=false,unauthorized=0,status='';
+ const api=createGoogleApi({clientId:'client',sheetId:'sheet',scope:'scope',getToken:()=>token,setToken:value=>{token=value;cleared=value===null},onUnauthorized:()=>unauthorized++,onStatus:value=>status=value,fetchImpl:async()=>({ok:false,status:401,json:async()=>({error:{message:'Unauthorized'}})})});
+ await assert.rejects(api.request('/values/A1'),/Unauthorized/);
+ assert.equal(cleared,true);assert.equal(unauthorized,1);assert.match(status,/Сессия Google истекла/);assert.equal(api.hasToken(),false);
 });
