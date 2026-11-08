@@ -160,7 +160,7 @@ test('tech card UI module renders empty directories without changing saved data'
  const $=id=>{if(!elements.has(id))elements.set(id,makeElement());return elements.get(id)};
  const saved={ingredients:[],techCards:[]},writes=[];
  const ui=createTechCardUI({
-  $,readStore:key=>key.includes('Ingredients')?saved.ingredients:saved.techCards,
+  $,initialIngredients:saved.ingredients,initialTechCards:saved.techCards,
   storage:{setItem:(key,value)=>writes.push([key,value])},scheduleGoogleSync:()=>{},
   nowLocal:()=> '2026-11-09T10:00',versionNow:()=> '2026-11-09T10:00',
   numberValue:value=>Number(value)||0,normalizeTechProductName:value=>String(value||'').trim().toLowerCase(),
