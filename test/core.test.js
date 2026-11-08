@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { numberValue, totalRecordActual, dayOf, normalizeTechProductName, techCardPlanInKg, esc } from '../js/core.js';
 import { summarizeRecords } from '../js/reports.js';
 import { readStore } from '../js/storage.js';
@@ -8,6 +9,28 @@ import { buildJournalHtml } from '../js/journal.js';
 import { normalizeRecord, parseSheetRecord, recordContent } from '../js/google-sheets.js';
 import { ingredientContent, cardContent, activeTechCards } from '../js/tech-cards.js';
 import { createTechCardUI } from '../js/tech-card-ui.js';
+
+test('app shell references existing DOM IDs and matching offline stylesheet URL',()=>{
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ const app=readFileSync(new URL('../app.js',import.meta.url),'utf8');
+ const ui=readFileSync(new URL('../js/tech-card-ui.js',import.meta.url),'utf8');
+ const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
+ const ids=new Set([...html.matchAll(/\bid=["']([^"']+)["']/g)].map(x=>x[1]));
+ const refs=[...app,...ui].join('').matchAll(/\$\(['"]([^'"]+)['"]\)/g);
+ const missing=[...refs].map(x=>x[1]).filter(id=>!ids.has(id));
+ assert.deepEqual([...new Set(missing)],[]);
+ const htmlCss=html.match(/href=["'](\.\/styles\.css\?v=\d+)["']/)?.[1];
+ const swCss=sw.match(/["'](\.\/styles\.css\?v=\d+)["']/)?.[1];
+ assert.ok(htmlCss,'index.html must load a versioned stylesheet');
+ assert.equal(swCss,htmlCss,'Service Worker must precache the exact stylesheet URL used by index.html');
+});
+
+test('backup import uses conflict-aware merge for ingredients and tech card versions',()=>{
+ const app=readFileSync(new URL('../app.js',import.meta.url),'utf8');
+ assert.match(app,/mergeVersioned\(item,nextIngredients\[index\],'ингредиента '/);
+ assert.match(app,/mergeVersioned\(item,nextCards\[index\],'техкарты '/);
+});
+
 import { createGoogleApi } from '../js/google-api.js';
 
 test('numberValue accepts decimal commas and grouped spaces',()=>{
