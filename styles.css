@@ -378,3 +378,122 @@ button.primary:active,.primary:active{
 #techcards #tcComment{min-height:44px}
 #techcards #saveTechCard,#techcards #cancelTechCard{min-height:48px;padding:11px 14px;border-radius:11px;font-size:15px}
 @media(max-width:360px){#techcards .tc-row{grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr) 20px;gap:5px}#techcards .tc-row select,#techcards .tc-row input{font-size:13px;padding:7px 5px}#techcards #techCardEditor .section-head button{font-size:12px;padding:7px 6px}}
+
+/* v121 — единая компактная форма технологической карты */
+#techcards #techCardEditor{
+  padding:18px;
+  border:1px solid #e8e8e3;
+  border-radius:18px;
+  background:#fff;
+  box-shadow:0 4px 18px rgba(25,25,25,.045);
+}
+#techcards #techCardEditor h2{
+  margin:0 0 18px;
+  font-size:20px;
+  line-height:1.25;
+  letter-spacing:-.35px;
+}
+#techcards #techCardEditor .field{margin-bottom:12px}
+#techcards #techCardEditor label{
+  margin:0 0 6px 2px;
+  color:#62625d;
+  font-size:12px;
+  font-weight:650;
+  line-height:1.25;
+}
+#techcards #techProduct,
+#techcards #tcOutput,
+#techcards #tcOutputUnit,
+#techcards #tcComment{
+  min-height:46px;
+  border:1px solid #e3e3de;
+  border-radius:11px;
+  background:#fff;
+  box-shadow:none;
+}
+#techcards #tcOutputUnit{padding-right:30px}
+#techcards #techCardEditor>.grid{gap:10px}
+#techcards #techCardEditor .section-head{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin:18px 0 10px;
+  align-items:center;
+}
+#techcards #techCardEditor .section-head h3{
+  grid-column:1/-1;
+  margin:0 0 2px;
+  font-size:16px;
+  letter-spacing:-.2px;
+}
+#techcards #techCardEditor .section-head button{
+  width:100%;
+  min-width:0;
+  min-height:40px;
+  padding:8px 9px;
+  border-radius:10px;
+  font-size:12px;
+  font-weight:650;
+  line-height:1.2;
+}
+#techcards .tc-row{
+  display:grid;
+  grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr) 24px;
+  align-items:end;
+  gap:9px;
+  padding:12px 0;
+  border-bottom:1px solid #eeeeea;
+}
+#techcards .tc-row .field{min-width:0;margin:0}
+#techcards .tc-row label{
+  margin:0 0 6px 2px;
+  font-size:11px;
+  font-weight:650;
+  color:#686862;
+}
+#techcards .tc-row select,
+#techcards .tc-row input{
+  width:100%;
+  min-width:0;
+  min-height:44px;
+  padding:8px 9px;
+  border:1px solid #e2e2dc;
+  border-radius:11px;
+  background:#fff;
+  font-size:14px;
+  box-shadow:none;
+}
+#techcards .tc-row-remove{
+  grid-column:3;
+  grid-row:2;
+  align-self:center;
+  justify-self:center;
+  width:22px;
+  height:22px;
+  margin:0 0 10px;
+  padding:0;
+  border:0;
+  border-radius:50%;
+  background:#f3f3f0;
+  color:#242424;
+  font-size:15px;
+  font-weight:500;
+  line-height:1;
+}
+#techcards .tc-row-remove:active{background:#e7e7e2}
+#techcards #tcComment{min-height:44px}
+#techcards #saveTechCard,
+#techcards #cancelTechCard{
+  min-height:46px;
+  border-radius:11px;
+  font-size:14px;
+  font-weight:650;
+}
+#techcards #saveTechCard{margin-top:4px}
+#techcards #cancelTechCard{margin-top:7px!important}
+@media(max-width:360px){
+  #techcards #techCardEditor{padding:14px}
+  #techcards .tc-row{grid-template-columns:minmax(0,1fr) minmax(0,.9fr) 22px;gap:6px}
+  #techcards .tc-row select,#techcards .tc-row input{font-size:13px;padding:7px 6px}
+  #techcards #techCardEditor .section-head button{font-size:11px;padding:7px 5px}
+}
