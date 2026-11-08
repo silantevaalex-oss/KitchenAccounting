@@ -151,3 +151,17 @@ test('Google API clears expired token and reports unauthorized state',async()=>{
  await assert.rejects(api.request('/values/A1'),/Unauthorized/);
  assert.equal(cleared,true);assert.equal(unauthorized,1);assert.match(status,/Сессия Google истекла/);assert.equal(api.hasToken(),false);
 });
+
+import { createGoogleSync } from '../js/google-sync.js';
+
+test('Google sync restores local state after merge and writes expected sheet tabs',async()=>{
+ const state={records:[],products:[],deletedIds:[],deletedAt:{},ingredients:[],techCards:[]};
+ const writes=[],store=new Map(),statuses=[];
+ const api={hasToken:()=>true,request:async path=>path.includes('fields=')?{sheets:[{properties:{title:'Ingredients'}},{properties:{title:'TechCards'}},{properties:{title:'TechCardIngredients'}}]}:{},read:async range=>range==='Products!A2:A'?[['Морковь']]:range==='Records!A2:N'?[['r1','2026-11-01T10:00','Морковь',12,10,0,0,'', '', '', 'r1','', '2026-11-01T10:01','']]:range==='Records!A1:N1'?[['ID','Дата и время','Продукт','Фактический выход','Плановый выход','Кол-во (шт)','Вес 1 шт (кг)','Комментарий','Статус','Пересчёт по техкарте','Версионный ID','Снимок данных','Время изменения','Время удаления']]:[],write:async(range,values)=>{writes.push({range,values})}};
+ const storage={getItem:key=>store.get(key)||null,setItem:(key,value)=>store.set(key,value)};
+ const helpers={normalizeRecord:r=>({...r}),parseSheetRecord:row=>({id:String(row[0]),stamp:String(row[1]),product:String(row[2]),actualYield:Number(row[3])||0,plannedYield:Number(row[4])||0,steaks:Number(row[5])||0,unitWeight:Number(row[6])||0,updatedAt:String(row[12]||''),status:row[8]||''}),recordContent:()=> 'fingerprint',mergeRecordLocalWins:(cloud,local)=>({...cloud,...local}),versionNow:()=>'2026-11-01T11:00:00',numberValue:value=>Number(value)||0,mergeVersioned:(cloud,local)=>({...cloud,...local}),ingredientContent:()=>'',cardContent:()=>''};
+ const sync=createGoogleSync({api,storage,keys:{records:'r',products:'p',deletedIds:'d',deletedAt:'da',ingredients:'i',techCards:'tc'},getState:()=>state,setState:next=>Object.assign(state,next),helpers,ui:{$:()=>null,renderAll:()=>{},googleStatus:s=>statuses.push(s)}});
+ await sync.syncGoogle();
+ assert.equal(state.records.length,1);assert.equal(state.records[0].product,'Морковь');assert.deepEqual(state.products,['Морковь']);
+ assert.ok(writes.some(x=>x.range==='Records!A1'));assert.ok(writes.some(x=>x.range==='Products!A1'));assert.match(statuses.at(-1),/Синхронизация завершена/);
+});
