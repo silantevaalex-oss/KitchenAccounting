@@ -3,6 +3,17 @@ export function createGoogleSync({api,storage,keys,getState,setState,helpers,ui}
  const {normalizeRecord,parseSheetRecord,recordContent,mergeRecordLocalWins,versionNow,numberValue,mergeVersioned,ingredientContent,cardContent}=helpers;
  const {$,renderAll,googleStatus}=ui;
  let syncInProgress=false,syncRequestedAgain=false;
+ async function mergeRecordWithChoice(cloud,local){
+  try{return mergeRecordLocalWins(cloud,local)}
+  catch(error){
+   const isVersionConflict=/без подтверждённой версии|Конфликт|без версии/.test(error.message||'');
+   if(!isVersionConflict||typeof ui.resolveRecordConflict!=='function')throw error;
+   const choice=await ui.resolveRecordConflict({cloud,local,error});
+   if(choice==='cloud')return {...normalizeRecord(cloud),updatedAt:versionNow()};
+   if(choice==='local')return {...normalizeRecord(local),updatedAt:versionNow()};
+   throw error;
+  }
+ }
  async function removeNormsSheet(){
   if(storage.getItem('normsRemoved')==='1')return false;
   const meta=await api.request('?fields=sheets.properties(sheetId,title)');
@@ -70,7 +81,7 @@ export function createGoogleSync({api,storage,keys,getState,setState,helpers,ui}
    const localDeleted=new Map(Object.entries(state.deletedAt||{}).map(([id,at])=>[String(id),String(at||'')]));
    state.deletedIds.forEach(id=>{if(!localDeleted.has(String(id)))localDeleted.set(String(id),'')});
    cloudDeleted.forEach((at,id)=>{if(!localDeleted.has(id)||String(at)>String(localDeleted.get(id)||''))localDeleted.set(id,at)});
-   state.records.forEach(r=>{const local=normalizeRecord(r),id=String(local.id),cloud=recordMap.get(id);if(cloud)recordMap.set(id,mergeRecordLocalWins(cloud,local));else recordMap.set(id,{...local,updatedAt:local.updatedAt||versionNow()})});
+   for(const r of state.records){const local=normalizeRecord(r),id=String(local.id),cloud=recordMap.get(id);if(cloud)recordMap.set(id,await mergeRecordWithChoice(cloud,local));else recordMap.set(id,{...local,updatedAt:local.updatedAt||versionNow()})}
    for(const [id,deletedTime] of localDeleted){const record=recordMap.get(id);if(!record)continue;const recordTime=String(record.updatedAt||'');if(!deletedTime||!recordTime||deletedTime>=recordTime)recordMap.delete(id);else localDeleted.delete(id)}
    const productMap=new Map();
    cloudProducts.forEach(row=>{if(row[0])productMap.set(String(row[0]).toLocaleLowerCase(),String(row[0]))});
