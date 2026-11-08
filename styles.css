@@ -520,3 +520,43 @@ button.primary:active,.primary:active{
   box-shadow:none;
   border-color:#e6e6df;
 }
+
+/* v123 — единица выхода как статичная метка, состав в компактной строке */
+#techcards #tcOutputUnit[readonly]{
+  min-height:46px;
+  padding:10px 12px;
+  color:#55564f;
+  -webkit-text-fill-color:#55564f;
+  background:#f4f4f1;
+  border:1px solid #e6e6df;
+  border-radius:11px;
+  box-shadow:none;
+  cursor:default;
+  pointer-events:none;
+}
+#techcards .tc-row{
+  grid-template-columns:minmax(0,1fr) minmax(78px,104px) 22px;
+  align-items:end;
+  gap:8px;
+  padding:10px 0;
+}
+#techcards .tc-row .tc-ingredient-field,
+#techcards .tc-row .tc-quantity-field{min-width:0}
+#techcards .tc-row .tc-quantity-field input{
+  padding-left:7px;
+  padding-right:7px;
+  font-variant-numeric:tabular-nums;
+  text-align:right;
+}
+#techcards .tc-row .tc-quantity-field label{
+  white-space:nowrap;
+  font-size:10px;
+}
+#techcards .tc-row-remove{
+  grid-column:3;
+  grid-row:2;
+  margin-bottom:10px;
+}
+@media(max-width:360px){
+  #techcards .tc-row{grid-template-columns:minmax(0,1fr) minmax(72px,88px) 20px;gap:6px}
+}
