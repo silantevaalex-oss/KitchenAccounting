@@ -48,7 +48,7 @@ export function createGoogleSync({api,storage,keys,getState,setState,helpers,ui}
    state.records.forEach(local=>{const id=String(local.id||'');if(!id)return;const cloud=restoredMap.get(id);restoredMap.set(id,cloud?mergeRecordLocalWins(cloud,normalizeRecord(local)):normalizeRecord(local))});
    state.deletedIds=[...new Set(state.deletedIds)];state.deletedIds.forEach(id=>restoredMap.delete(id));
    const restored=[...restoredMap.values()].sort((a,b)=>a.stamp.localeCompare(b.stamp));
-   if(!restored.length)throw new Error('В таблице не найдены записи в диапазоне Records!A2:H. Локальные данные не изменены.');
+   if(!restored.length)throw new Error('В таблице не найдены записи в диапазоне Records!A2:O. Локальные данные не изменены.');
    if(!restored.some(r=>r.actualYield!==0||r.plannedYield!==0||r.steaks!==0))throw new Error('Google вернул записи, но выходы и количество во всех строках равны нулю. Локальные данные не изменены.');
    const restoredProducts=[...new Set([...cloudProducts.map(r=>String(r[0]||'').trim()),...restored.map(r=>r.product)].filter(Boolean))];
    state.records=restored;state.products=[...new Set([...restoredProducts,...state.products])];setState({records:state.records,products:state.products,deletedIds:state.deletedIds,deletedAt:state.deletedAt});
