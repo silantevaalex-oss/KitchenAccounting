@@ -42,7 +42,7 @@ function makeSheet() {
 // Одно «устройство»: своё локальное состояние, общая таблица.
 const device = records => ({ records, products: [], deletedIds: [], deletedAt: {}, ingredients: [], techCards: [] });
 
-async function sync(sheet, state, resolveRecordConflict) {
+async function sync(sheet, state, resolveRecordConflict, returnEngine = false) {
   const statuses = [], store = new Map();
   const engine = createGoogleSync({
     api: sheet.api,
@@ -53,7 +53,7 @@ async function sync(sheet, state, resolveRecordConflict) {
     ui: { $: () => null, renderAll() {}, googleStatus: s => statuses.push(s), scheduleGoogleSync() {}, resolveRecordConflict }
   });
   await engine.syncGoogle();
-  return statuses.at(-1);
+  return returnEngine ? { status: statuses.at(-1), engine } : statuses.at(-1);
 }
 
 // Запись так, как её сохраняет форма «Новая обработка».
@@ -166,4 +166,48 @@ test('конфликт старой версии можно разрешить �
   ]);
   assert.match(await sync(sheet, state, async () => 'cloud'), OK);
   assert.equal(state.records[0].comment, 'из таблицы');
+});
+
+test('разовая очистка удаляет только точный комментарий «0» и обновляет fingerprint', async () => {
+  const sheet = makeSheet();
+  const state = device([
+    rec('zero', '2026-11-09T10:00', 'Лосось', { comment: '0' }),
+    rec('zero-space', '2026-11-09T11:00', 'Курица', { comment: '0 ' })
+  ]);
+  const { status, engine } = await sync(sheet, state, undefined, true);
+  assert.match(status, OK);
+  const prepared = await engine.prepareLegacyZeroCommentCleanup();
+  assert.equal(prepared.localCount, 1);
+  assert.equal(prepared.cloudCount, 1);
+  assert.equal(prepared.skippedCount, 0);
+  assert.equal(prepared.backup.localRecords[0].comment, '0');
+  const originalRequest = sheet.api.request;
+  sheet.api.request = async (path, options = {}) => {
+    if (path.includes('/values:batchUpdate')) {
+      const body = JSON.parse(options.body);
+      for (const update of body.data) await sheet.api.write(update.range, update.values);
+      return {};
+    }
+    return originalRequest(path, options);
+  };
+  const result = await engine.applyLegacyZeroCommentCleanup();
+  assert.deepEqual(result, { localCount: 1, cloudCount: 1, skippedCount: 0 });
+  assert.equal(state.records.find(r => r.id === 'zero').comment, '');
+  assert.equal(state.records.find(r => r.id === 'zero-space').comment, '0 ');
+  assert.equal(sheet.tabs.Records[1][7], '');
+  assert.equal(sheet.tabs.Records[2][7], '0 ');
+  const normalizedCloud = parseSheetRecord(sheet.tabs.Records[1], header);
+  assert.equal(sheet.tabs.Records[1][11], recordContent(normalizedCloud));
+  assert.ok(sheet.tabs.Records[1][12], 'updatedAt is written with the new fingerprint');
+});
+
+test('очистка комментариев пропускает конфликт между локальной записью и таблицей', async () => {
+  const sheet = makeSheet();
+  const state = device([rec('r1', '2026-11-09T10:00', 'Лосось', { comment: 'моя заметка' })]);
+  const { engine } = await sync(sheet, state, undefined, true);
+  await sheet.api.write('Records!H2', [['0']]);
+  const prepared = await engine.prepareLegacyZeroCommentCleanup();
+  assert.equal(prepared.localCount, 0);
+  assert.equal(prepared.cloudCount, 0);
+  assert.equal(prepared.skippedCount, 1);
 });
