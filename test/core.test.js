@@ -7,6 +7,7 @@ import { mergeVersioned } from '../js/sync-merge.js';
 import { buildJournalHtml } from '../js/journal.js';
 import { normalizeRecord, parseSheetRecord, recordContent } from '../js/google-sheets.js';
 import { ingredientContent, cardContent, activeTechCards } from '../js/tech-cards.js';
+import { createTechCardUI } from '../js/tech-card-ui.js';
 import { createGoogleApi } from '../js/google-api.js';
 
 test('numberValue accepts decimal commas and grouped spaces',()=>{
@@ -150,6 +151,36 @@ test('Google API clears expired token and reports unauthorized state',async()=>{
  const api=createGoogleApi({clientId:'client',sheetId:'sheet',scope:'scope',getToken:()=>token,setToken:value=>{token=value;cleared=value===null},onUnauthorized:()=>unauthorized++,onStatus:value=>status=value,fetchImpl:async()=>({ok:false,status:401,json:async()=>({error:{message:'Unauthorized'}})})});
  await assert.rejects(api.request('/values/A1'),/Unauthorized/);
  assert.equal(cleared,true);assert.equal(unauthorized,1);assert.match(status,/Сессия Google истекла/);assert.equal(api.hasToken(),false);
+});
+
+
+test('tech card UI module renders empty directories without changing saved data',()=>{
+ const elements=new Map();
+ const makeElement=()=>({value:'',innerHTML:'',textContent:'',checked:false,dataset:{},classList:{add(){},remove(){},toggle(){},contains(){return true}},addEventListener(){},scrollIntoView(){}});
+ const $=id=>{if(!elements.has(id))elements.set(id,makeElement());return elements.get(id)};
+ const saved={ingredients:[],techCards:[]},writes=[];
+ const ui=createTechCardUI({
+  $,initialIngredients:saved.ingredients,initialTechCards:saved.techCards,
+  storage:{setItem:(key,value)=>writes.push([key,value])},scheduleGoogleSync:()=>{},
+  nowLocal:()=> '2026-11-09T10:00',versionNow:()=> '2026-11-09T10:00',
+  numberValue:value=>Number(value)||0,normalizeTechProductName:value=>String(value||'').trim().toLowerCase(),
+  techCardPlanInKg:()=>null,kg:value=>String(value),esc:value=>String(value),
+  calc:()=>{},getEditing:()=>null,getProducts:()=>[],updateProducts:()=>{},
+  alertFn:()=>{},confirmFn:()=>true,promptFn:()=>'',cryptoApi:{randomUUID:()=>'generated-id'},
+  productsKey:'products'
+ });
+ ui.renderStage1();
+ assert.match($('ingredientList').innerHTML,/Активных ингредиентов нет/);
+ assert.match($('techCardList').innerHTML,/Технологических карт пока нет/);
+ assert.deepEqual(writes,[]);
+ ui.setState({
+  ingredients:[{id:'i1',name:'Мясо',unit:'кг',active:true}],
+  techCards:[{cardId:'c1',version:1,product:'Фарш',outputQty:2,outputUnit:'кг',ingredients:[{ingredientId:'i1',name:'Мясо',quantity:1,unit:'кг'}]}]
+ });
+ ui.renderStage1();
+ assert.match($('ingredientList').innerHTML,/Мясо/);
+ assert.match($('techCardList').innerHTML,/Фарш/);
+ assert.deepEqual(writes,[]);
 });
 
 import { createGoogleSync } from '../js/google-sync.js';

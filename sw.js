@@ -1,8 +1,8 @@
 const CACHE_PREFIX='kitchen-accounting-shell-';
-const CACHE=CACHE_PREFIX+'v3';
+const CACHE=CACHE_PREFIX+'v4';
 const APP_SHELL=[
- './','./index.html','./styles.css?v=136','./app.js?v=138',
- './js/core.js','./js/reports.js','./js/storage.js','./js/sync-merge.js','./js/journal.js','./js/google-sheets.js','./js/tech-cards.js','./js/google-api.js','./js/google-sync.js',
+ './','./index.html','./styles.css?v=136','./app.js?v=139',
+ './js/core.js','./js/reports.js','./js/storage.js','./js/sync-merge.js','./js/journal.js','./js/google-sheets.js','./js/tech-cards.js','./js/tech-card-ui.js','./js/google-api.js','./js/google-sync.js',
  './manifest.webmanifest','./icon.svg'
 ];
 
