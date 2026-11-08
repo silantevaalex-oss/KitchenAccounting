@@ -42,7 +42,7 @@ function makeSheet() {
 // Одно «устройство»: своё локальное состояние, общая таблица.
 const device = records => ({ records, products: [], deletedIds: [], deletedAt: {}, ingredients: [], techCards: [] });
 
-async function sync(sheet, state) {
+async function sync(sheet, state, resolveRecordConflict) {
   const statuses = [], store = new Map();
   const engine = createGoogleSync({
     api: sheet.api,
@@ -50,7 +50,7 @@ async function sync(sheet, state) {
     keys: { records: 'r', products: 'p', deletedIds: 'd', deletedAt: 'da', ingredients: 'i', techCards: 'tc' },
     getState: () => state, setState: next => Object.assign(state, next),
     helpers: { normalizeRecord, parseSheetRecord, recordContent, mergeRecordLocalWins, versionNow, numberValue, mergeVersioned, ingredientContent, cardContent },
-    ui: { $: () => null, renderAll() {}, googleStatus: s => statuses.push(s), scheduleGoogleSync() {} }
+    ui: { $: () => null, renderAll() {}, googleStatus: s => statuses.push(s), scheduleGoogleSync() {}, resolveRecordConflict }
   });
   await engine.syncGoogle();
   return statuses.at(-1);
@@ -135,4 +135,35 @@ test('удаление новее правки убирает запись, пр
     assert.equal(other.records.some(r => r.id === 'x'), survives, 'deletedAt=' + deletedAt);
     assert.equal(sheet.tabs.Records.some(row => row && row[0] === 'x' && row[8] === 'DELETE'), !survives);
   }
+});
+
+test('конфликт старой версии можно разрешить выбором локальной записи и продолжить синхронизацию', async () => {
+  const sheet = makeSheet(), state = device([rec('A', '2026-11-09T09:00', 'Первый'), rec('B', '2026-11-09T11:00', 'Третий')]);
+  assert.match(await sync(sheet, state), OK);
+  await sheet.api.write('Records!A1', [
+    header.slice(0, 10),
+    ['A', '2026-11-09T09:00', 'Первый', 2.8, 3, 0, 0, '', ''],
+    ['B', '2026-11-09T11:00', 'Третий', 2.8, 3, 0, 0, 'правка старой версией', '']
+  ]);
+  let asked = 0;
+  assert.match(await sync(sheet, state, async ({ local, cloud }) => {
+    asked++;
+    assert.equal(local.id, 'B');
+    assert.equal(cloud.comment, 'правка старой версией');
+    return 'local';
+  }), OK);
+  assert.equal(asked, 1);
+  assert.equal(state.records.find(r => r.id === 'B').comment, '');
+  assert.equal(sheet.tabs.Records[2][7], '');
+});
+
+test('конфликт старой версии можно разрешить выбором версии из таблицы', async () => {
+  const sheet = makeSheet(), state = device([rec('B', '2026-11-09T11:00', 'Третий')]);
+  assert.match(await sync(sheet, state), OK);
+  await sheet.api.write('Records!A1', [
+    header.slice(0, 10),
+    ['B', '2026-11-09T11:00', 'Третий', 2.8, 3, 0, 0, 'из таблицы', '']
+  ]);
+  assert.match(await sync(sheet, state, async () => 'cloud'), OK);
+  assert.equal(state.records[0].comment, 'из таблицы');
 });
