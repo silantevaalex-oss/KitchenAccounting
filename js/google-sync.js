@@ -107,7 +107,8 @@ export function createGoogleSync({api,storage,keys,getState,setState,helpers,ui}
    const id=String(record.id);
    return eligibleIds.has(id)&&record.comment==='0'?{...record,comment:'',updatedAt:stamps.get(id)}:record;
   });
-  const localCount=nextRecords.filter((r,i)=>state.records[i]?.comment==='0'&&r.comment==='').length;\n  pendingCommentCleanup={cloudUpdates,nextRecords,eligibleIds:[...eligibleIds],skippedIds:[...skippedIds],localCount};
+  const localCount=nextRecords.filter((r,i)=>state.records[i]?.comment==='0'&&r.comment==='').length;
+  pendingCommentCleanup={cloudUpdates,nextRecords,eligibleIds:[...eligibleIds],skippedIds:[...skippedIds],localCount};
   return {
    localCount,
    cloudCount:cloudUpdates.length/2,
