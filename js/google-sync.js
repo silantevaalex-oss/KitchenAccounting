@@ -51,7 +51,7 @@ export function createGoogleSync({api,storage,keys,getState,setState,helpers,ui}
    if(!restored.length)throw new Error('В таблице не найдены записи в диапазоне Records!A2:H. Локальные данные не изменены.');
    if(!restored.some(r=>r.actualYield!==0||r.plannedYield!==0||r.steaks!==0))throw new Error('Google вернул записи, но выходы и количество во всех строках равны нулю. Локальные данные не изменены.');
    const restoredProducts=[...new Set([...cloudProducts.map(r=>String(r[0]||'').trim()),...restored.map(r=>r.product)].filter(Boolean))];
-   state.records=restored;state.products=[...new Set([...restoredProducts,...state.products])];setState(state);
+   state.records=restored;state.products=[...new Set([...restoredProducts,...state.products])];setState({records:state.records,products:state.products,deletedIds:state.deletedIds,deletedAt:state.deletedAt});
    storage.setItem(keys.records,JSON.stringify(state.records));storage.setItem(keys.products,JSON.stringify(state.products));storage.setItem(keys.deletedIds,JSON.stringify(state.deletedIds));storage.setItem(keys.deletedAt,JSON.stringify(state.deletedAt));
    await syncStage1Sheets();renderAll();
    googleStatus('Восстановлено из Google: '+state.records.length+' записей. Таблица Google не изменялась.');
@@ -81,7 +81,7 @@ export function createGoogleSync({api,storage,keys,getState,setState,helpers,ui}
    state.deletedAt=Object.fromEntries(localDeleted);state.deletedIds=[...localDeleted.keys()];
    const sheetRows=[['ID','Дата и время','Продукт','Фактический выход','Плановый выход','Кол-во (шт)','Вес 1 шт (кг)','Комментарий','Статус','Пересчёт по техкарте','Версионный ID','Снимок данных','Время изменения','Время удаления'],...mergedRecords.map(r=>[String(r.id),String(r.stamp||''),String(r.product||''),numberValue(r.actualYield??r.yield),numberValue(r.plannedYield??r.layout1),numberValue(r.steaks),numberValue(r.unitWeight),String(r.comment||''),'',r.techCardScale?JSON.stringify(r.techCardScale):'',String(r.id),recordContent(r),r.updatedAt||versionNow(),'']),...state.deletedIds.map(id=>[String(id),'','','',0,0,0,'','DELETE','',''+String(id),'DELETE','',state.deletedAt[id]||''])];
    await api.write('Products!A1',[['Название продукта'],...mergedProducts.map(p=>[p])]);await api.write('Records!A1',sheetRows);await removeNormsSheet();
-   state.records=mergedRecords;state.products=mergedProducts;setState(state);
+   state.records=mergedRecords;state.products=mergedProducts;setState({records:state.records,products:state.products,deletedIds:state.deletedIds,deletedAt:state.deletedAt});
    storage.setItem(keys.records,JSON.stringify(state.records));storage.setItem(keys.products,JSON.stringify(state.products));storage.setItem(keys.deletedIds,JSON.stringify(state.deletedIds));storage.setItem(keys.deletedAt,JSON.stringify(state.deletedAt));
    renderAll();googleStatus('Синхронизация завершена. Записей: '+state.records.length+', продуктов: '+state.products.length+'.');
   }catch(error){googleStatus('Ошибка синхронизации: '+error.message+'. Локальные данные сохранены.')}
