@@ -19,16 +19,16 @@ test('app shell references existing DOM IDs and matching offline stylesheet URL'
  const refs=[...app,...ui].join('').matchAll(/\$\(['"]([^'"]+)['"]\)/g);
  const missing=[...refs].map(x=>x[1]).filter(id=>!ids.has(id));
  assert.deepEqual([...new Set(missing)],[]);
- const htmlCss=html.match(/href=["'](\.\\/styles\.css\?v=\d+)["']/)?.[1];
- const swCss=sw.match(/["'](\.\\/styles\.css\?v=\d+)["']/)?.[1];
+ const htmlCss=html.match(/href=["'](\.\/styles\.css\?v=\d+)["']/)?.[1];
+ const swCss=sw.match(/["'](\.\/styles\.css\?v=\d+)["']/)?.[1];
  assert.ok(htmlCss,'index.html must load a versioned stylesheet');
  assert.equal(swCss,htmlCss,'Service Worker must precache the exact stylesheet URL used by index.html');
 });
 
 test('backup import uses conflict-aware merge for ingredients and tech card versions',()=>{
  const app=readFileSync(new URL('../app.js',import.meta.url),'utf8');
- assert.match(app,/mergeVersioned\(item,nextIngredients\\[index\\],'ингредиента '/);
- assert.match(app,/mergeVersioned\(item,nextCards\\[index\\],'техкарты '/);
+ assert.match(app,/mergeVersioned\(item,nextIngredients\[index\],'ингредиента '/);
+ assert.match(app,/mergeVersioned\(item,nextCards\[index\],'техкарты '/);
 });
 
 import { createGoogleApi } from '../js/google-api.js';
