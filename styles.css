@@ -883,3 +883,15 @@ button.primary:active,.primary:active{
   #techcards #techCardEditor #tcIngredientRows .tc-row select,
   #techcards #techCardEditor #tcIngredientRows .tc-row input{font-size:13px!important}
 }
+
+/* v129 — сортировка списка продуктов в общей стилистике */
+.stats-products-title{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.stats-sort-btn{
+ display:inline-flex;align-items:center;justify-content:center;
+ width:34px;height:32px;padding:0;
+ border:1px solid var(--line);border-radius:9px;
+ background:var(--soft);color:var(--ink);
+ font:700 17px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+ cursor:pointer;transition:background .15s,border-color .15s;
+}
+.stats-sort-btn:active{background:var(--line)}
