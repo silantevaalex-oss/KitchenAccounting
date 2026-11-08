@@ -656,3 +656,43 @@ button.primary:active,.primary:active{
   }
   #techcards #techCardEditor > .grid:has(#tcOutputUnit){grid-template-columns:minmax(0,1fr) 70px!important}
 }
+
+/* v125 — чистая компактная форма техкарты без повторяющихся подписей единиц */
+#techcards #techCardEditor{padding:16px!important;border-radius:18px!important}
+#techcards #techCardEditor h2{font-size:20px!important;line-height:1.22!important;margin:0 0 16px!important}
+#techcards #techCardEditor .tc-output-field{margin:0 0 18px!important}
+#techcards #techCardEditor .tc-output-field label{font-size:13px!important;color:#5f605b!important;margin:0 0 6px 2px!important}
+#techcards #techCardEditor #tcOutput{width:100%!important;min-height:46px!important;height:46px!important;border:1px solid #deded8!important;border-radius:12px!important;background:#fff!important;padding:9px 12px!important;font-size:17px!important;font-weight:600!important;box-shadow:none!important}
+#techcards #techCardEditor .section-head{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:8px!important;margin:18px 0 9px!important}
+#techcards #techCardEditor .section-head h3{grid-column:1/-1!important;font-size:17px!important;margin:0 0 2px!important}
+#techcards #techCardEditor .section-head button{min-width:0!important;width:100%!important;min-height:42px!important;padding:8px 7px!important;border-radius:11px!important;font-size:12px!important;white-space:normal!important}
+#techcards #techCardEditor #tcIngredientRows{display:flex!important;flex-direction:column!important;gap:0!important}
+#techcards #techCardEditor #tcIngredientRows .tc-row{
+ display:grid!important;grid-template-columns:minmax(0,1fr) 88px 22px!important;
+ grid-template-rows:1fr!important;align-items:center!important;gap:8px!important;
+ padding:8px 0!important;border-bottom:1px solid #ecece7!important;
+}
+#techcards #techCardEditor #tcIngredientRows .tc-row .field{min-width:0!important;margin:0!important}
+#techcards #techCardEditor #tcIngredientRows .tc-row select,
+#techcards #techCardEditor #tcIngredientRows .tc-row input{
+ width:100%!important;min-width:0!important;height:42px!important;min-height:42px!important;
+ padding:7px 9px!important;border:1px solid #e1e1db!important;border-radius:11px!important;
+ background:#fff!important;box-shadow:none!important;font-size:14px!important;
+}
+#techcards #techCardEditor #tcIngredientRows .tc-row select{padding-right:23px!important}
+#techcards #techCardEditor #tcIngredientRows .tc-row input{text-align:right!important;padding:7px 6px!important;font-variant-numeric:tabular-nums!important}
+#techcards #techCardEditor #tcIngredientRows .tc-row-remove{
+ grid-column:3!important;grid-row:1!important;align-self:center!important;justify-self:center!important;
+ width:21px!important;height:21px!important;margin:0!important;padding:0!important;border:0!important;
+ border-radius:50%!important;background:#f1f1ed!important;color:#252525!important;
+ font-size:14px!important;line-height:21px!important;
+}
+#techcards #techCardEditor #tcComment{min-height:44px!important}
+#techcards #techCardEditor #saveTechCard,
+#techcards #techCardEditor #cancelTechCard{min-height:46px!important;border-radius:12px!important;font-size:14px!important}
+@media(max-width:360px){
+ #techcards #techCardEditor{padding:13px!important}
+ #techcards #techCardEditor #tcIngredientRows .tc-row{grid-template-columns:minmax(0,1fr) 78px 20px!important;gap:6px!important}
+ #techcards #techCardEditor #tcIngredientRows .tc-row select,
+ #techcards #techCardEditor #tcIngredientRows .tc-row input{font-size:13px!important;padding-left:6px!important;padding-right:6px!important}
+}
