@@ -124,7 +124,7 @@ const INGKEY='kitchenAccountingIngredientsV1',TCKEY='kitchenAccountingTechCardsV
 let ingredients=readStore(INGKEY,[]),techCards=readStore(TCKEY,[]);if(!Array.isArray(ingredients))ingredients=[];if(!Array.isArray(techCards))techCards=[];
 const techCardUI=createTechCardUI({
  $,initialIngredients:ingredients,initialTechCards:techCards,storage:localStorage,scheduleGoogleSync,nowLocal,versionNow,
- normalizeTechProductName,techCardPlanInKg,kg,esc,calc,
+ normalizeTechProductName,techCardPlanInKg,numberValue,kg,esc,calc,
  getEditing:()=>editing,getProducts:()=>products,updateProducts,productsKey:PKEY
 });
 const {resetTechCardScale,resetTechCardProductTracking,setTechCardProductTracking,buildTechCardScaleSnapshot,applyTechCardPlan,renderStage1}=techCardUI;
